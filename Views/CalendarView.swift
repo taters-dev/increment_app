@@ -17,37 +17,42 @@ struct CalendarView: View {
     }
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                VStack(spacing: 0) {
-                    // App title at the top
-                    VStack(spacing: 8) {
-                        Text("INCREMENT")
-                            .font(.system(size: 16, weight: .bold, design: .default))
-                            .italic()
-                            .foregroundColor(Color(red: 11/255, green: 20/255, blue: 64/255))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.bottom, 10)
-                    .padding(.top, -4)
-                    // Calendar
-                    CalendarViewComponent(
-                        selectedDate: $selectedDate,
-                        datesWithWorkouts: datesWithWorkouts
-                    )
-                    .padding(.top, 96) // Half of quadrupled margin between INCREMENT and Calendar
-                    .padding(.bottom, 0)
-                    .padding(.horizontal, 16)
+        ZStack {
+            Color.white.ignoresSafeArea()
+            VStack(spacing: 0) {
+                // Fixed header - doesn't scroll
+                VStack(spacing: 8) {
+                    Text("INCREMENT")
+                        .font(.system(size: 16, weight: .bold, design: .default))
+                        .italic()
+                        .foregroundColor(Color(red: 11/255, green: 20/255, blue: 64/255))
                     
-                    // Workouts for selected date
-                    VStack(alignment: .leading, spacing: 0) {
-                        List {
+                    Text("Calendar")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.primary)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 10)
+                .padding(.top, 20)
+                .background(Color.white)
+                
+                // Scrollable content - only this part scrolls
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // Calendar
+                        CalendarViewComponent(
+                            selectedDate: $selectedDate,
+                            datesWithWorkouts: datesWithWorkouts
+                        )
+                        .padding(.horizontal, 16)
+                        
+                        // Workouts for selected date
+                        VStack(alignment: .leading, spacing: 8) {
                             if workoutsForSelectedDate.isEmpty {
                                 Text("No workouts recorded")
                                     .foregroundColor(.secondary)
-                                    .padding()
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(Color.clear)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.vertical, 40)
                             } else {
                                 ForEach(workoutsForSelectedDate) { workout in
                                     Button(action: {
@@ -63,31 +68,34 @@ struct CalendarView: View {
                                     }) {
                                         WorkoutHistoryRow(workout: workout)
                                             .padding(.horizontal, 16)
-                                            .padding(.vertical, 2)
+                                            .padding(.vertical, 8)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                             .background(Color.white)
                                             .cornerRadius(8)
                                             .foregroundColor(.primary)
                                     }
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(Color.clear)
-                                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                                    .buttonStyle(PlainButtonStyle())
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            if let index = workoutsForSelectedDate.firstIndex(where: { $0.id == workout.id }) {
+                                                deleteWorkouts(at: IndexSet(integer: index))
+                                            }
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
                                 }
-                                .onDelete(perform: deleteWorkouts)
                             }
                         }
-                        .listStyle(PlainListStyle())
-                        .scrollContentBackground(.hidden)
-                        .frame(height: 300) // Fixed height for consistency
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 20)
                     }
-                    .frame(maxWidth: .infinity)
-                    .background(Color.white)
-                    .cornerRadius(15)
-                    .padding(.horizontal, 16)
+                    .padding(.top, 10)
                 }
-                .navigationTitle("Calendar")
-                
-                if showingFullScreenImage, 
+            }
+            
+            // Modal overlays (on top of everything)
+            if showingFullScreenImage, 
                    let workout = selectedWorkout,
                    let photoData = workout.progressPhotoData,
                    let image = UIImage(data: photoData) {
@@ -154,8 +162,8 @@ struct CalendarView: View {
                         )
                     }
                 }
-
-                if showingWorkoutDetail,
+            
+            if showingWorkoutDetail,
                    let workout = selectedWorkout {
                     // Workout detail overlay
                     Color.black.opacity(0.3)
@@ -189,7 +197,6 @@ struct CalendarView: View {
                     }
                 }
             }
-        }
         .onAppear {
             // Ensure we have the latest workout data
             Task {

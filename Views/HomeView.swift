@@ -37,7 +37,7 @@ struct HomeView: View {
         ZStack {
             Color.white.ignoresSafeArea()
             VStack(spacing: 0) {
-                // App title at the top
+                // App title at the top - pinned
                 VStack(spacing: 8) {
                     Text("INCREMENT")
                         .font(.system(size: 16, weight: .bold, design: .default))
@@ -51,74 +51,79 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, 10)
                 .padding(.top, 20)
+                .background(Color.white)
                 
-                // Today's Workout Modal - locked in place
-                if let profile = userProfileStore.profile {
-                    if let workout = todayWorkout {
-                        TodayWorkoutCard(
-                            workout: workout,
-                            workoutSplit: profile.workoutSplit,
-                            selectedWorkout: $selectedWorkoutDay,
-                            showingWorkoutPicker: $showingWorkoutPicker,
-                            showingSettings: $showingSettings,
-                            showingExerciseEditor: $showingExerciseEditor,
-                            showingExerciseHistory: $showingExerciseHistory,
-                            selectedExerciseForHistory: $selectedExerciseForHistory,
-                            onStartTap: { 
-                                // Capture the selected workout when starting
-                                if let activeWorkout = workoutStore.activeWorkout {
-                                    // Starting workout with active workout
-                                } else {
-                                    // Starting workout with no active workout
-                                }
-                                showingNewWorkout = true 
-                            },
-                            onWorkoutPickerTap: { showingWorkoutPicker.toggle() }
+                // Scrollable content
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // Today's Workout Modal
+                        if let profile = userProfileStore.profile {
+                            if let workout = todayWorkout {
+                                TodayWorkoutCard(
+                                    workout: workout,
+                                    workoutSplit: profile.workoutSplit,
+                                    selectedWorkout: $selectedWorkoutDay,
+                                    showingWorkoutPicker: $showingWorkoutPicker,
+                                    showingSettings: $showingSettings,
+                                    showingExerciseEditor: $showingExerciseEditor,
+                                    showingExerciseHistory: $showingExerciseHistory,
+                                    selectedExerciseForHistory: $selectedExerciseForHistory,
+                                    onStartTap: { 
+                                        // Capture the selected workout when starting
+                                        if let activeWorkout = workoutStore.activeWorkout {
+                                            // Starting workout with active workout
+                                        } else {
+                                            // Starting workout with no active workout
+                                        }
+                                        showingNewWorkout = true 
+                                    },
+                                    onWorkoutPickerTap: { showingWorkoutPicker.toggle() }
+                                )
+                                .environmentObject(userProfileStore)
+                                .padding(.horizontal, 16)
+                            } else if !profile.workoutSplit.isEmpty {
+                                TodayWorkoutCard(
+                                    workout: profile.workoutSplit[0],
+                                    workoutSplit: profile.workoutSplit,
+                                    selectedWorkout: $selectedWorkoutDay,
+                                    showingWorkoutPicker: $showingWorkoutPicker,
+                                    showingSettings: $showingSettings,
+                                    showingExerciseEditor: $showingExerciseEditor,
+                                    showingExerciseHistory: $showingExerciseHistory,
+                                    selectedExerciseForHistory: $selectedExerciseForHistory,
+                                    onStartTap: { 
+                                        // Capture the selected workout when starting
+                                        if let activeWorkout = workoutStore.activeWorkout {
+                                            // Starting workout with active workout
+                                        } else {
+                                            // Starting workout with no active workout
+                                        }
+                                        showingNewWorkout = true 
+                                    },
+                                    onWorkoutPickerTap: { showingWorkoutPicker.toggle() }
+                                )
+                                .environmentObject(userProfileStore)
+                                .padding(.horizontal, 16)
+                            } else {
+                                NoWorkoutScheduledCard()
+                                    .padding(.horizontal, 16)
+                            }
+                        } else {
+                            NoWorkoutScheduledCard()
+                                .padding(.horizontal, 16)
+                        }
+                        
+                        // Quick Actions
+                        QuickActionsGrid(
+                            onProgressPhotoTap: { showingProgressPhotoUpload = true },
+                            onWeightUpdateTap: { showingWeightUpdate = true },
+                            onGoalUpdateTap: { showingGoalUpdate = true }
                         )
-                        .environmentObject(userProfileStore)
                         .padding(.horizontal, 16)
-                    } else if !profile.workoutSplit.isEmpty {
-                        TodayWorkoutCard(
-                            workout: profile.workoutSplit[0],
-                            workoutSplit: profile.workoutSplit,
-                            selectedWorkout: $selectedWorkoutDay,
-                            showingWorkoutPicker: $showingWorkoutPicker,
-                            showingSettings: $showingSettings,
-                            showingExerciseEditor: $showingExerciseEditor,
-                            showingExerciseHistory: $showingExerciseHistory,
-                            selectedExerciseForHistory: $selectedExerciseForHistory,
-                            onStartTap: { 
-                                // Capture the selected workout when starting
-                                if let activeWorkout = workoutStore.activeWorkout {
-                                    // Starting workout with active workout
-                                } else {
-                                    // Starting workout with no active workout
-                                }
-                                showingNewWorkout = true 
-                            },
-                            onWorkoutPickerTap: { showingWorkoutPicker.toggle() }
-                        )
-                        .environmentObject(userProfileStore)
-                        .padding(.horizontal, 16)
-                    } else {
-                        NoWorkoutScheduledCard()
-                            .padding(.horizontal, 16)
+                        .padding(.bottom, 20)
                     }
-                } else {
-                    NoWorkoutScheduledCard()
-                        .padding(.horizontal, 16)
+                    .padding(.top, 10)
                 }
-                
-                Spacer()
-                
-                // Quick Actions - positioned at bottom
-                QuickActionsGrid(
-                    onProgressPhotoTap: { showingProgressPhotoUpload = true },
-                    onWeightUpdateTap: { showingWeightUpdate = true },
-                    onGoalUpdateTap: { showingGoalUpdate = true }
-                )
-                .padding(.horizontal, 16)
-                .padding(.bottom, 20)
             }
         }
         .sheet(isPresented: $showingNewWorkout) {
