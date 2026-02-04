@@ -5,11 +5,6 @@ struct HomeView: View {
     @EnvironmentObject var userProfileStore: UserProfileStore
     @EnvironmentObject var appStateManager: AppStateManager
     @State private var showingNewWorkout = false
-    @State private var showingProgressPhotoUpload = false
-    @State private var showingWeightUpdate = false
-    @State private var showingGoalUpdate = false
-    @State private var selectedImage: UIImage?
-    @State private var bodyWeight: String = ""
     @State private var selectedWorkout: Workout?
     @State private var showingWorkoutDetail = false
     @State private var selectedWorkoutDay: UserProfile.WorkoutDay?
@@ -35,27 +30,13 @@ struct HomeView: View {
     
     var body: some View {
         ZStack {
-            Color.white.ignoresSafeArea()
+            AppStyle.surface.ignoresSafeArea()
             VStack(spacing: 0) {
-                // App title at the top - pinned
-                VStack(spacing: 8) {
-                    Text("INCREMENT")
-                        .font(.system(size: 16, weight: .bold, design: .default))
-                        .italic()
-                        .foregroundColor(Color(red: 11/255, green: 20/255, blue: 64/255))
-                    
-                    Text(Date(), style: .date)
-                        .font(.system(size: 14, weight: .medium, design: .default))
-                        .foregroundColor(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 10)
-                .padding(.top, 20)
-                .background(Color.white)
+                HeaderView(title: "Home", subtitle: Date().formatted(date: .abbreviated, time: .omitted))
                 
                 // Scrollable content
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(spacing: AppStyle.sectionSpacing) {
                         // Today's Workout Modal
                         if let profile = userProfileStore.profile {
                             if let workout = todayWorkout {
@@ -80,7 +61,7 @@ struct HomeView: View {
                                     onWorkoutPickerTap: { showingWorkoutPicker.toggle() }
                                 )
                                 .environmentObject(userProfileStore)
-                                .padding(.horizontal, 16)
+                                .padding(.horizontal, AppStyle.cardPadding)
                             } else if !profile.workoutSplit.isEmpty {
                                 TodayWorkoutCard(
                                     workout: profile.workoutSplit[0],
@@ -103,24 +84,15 @@ struct HomeView: View {
                                     onWorkoutPickerTap: { showingWorkoutPicker.toggle() }
                                 )
                                 .environmentObject(userProfileStore)
-                                .padding(.horizontal, 16)
+                                .padding(.horizontal, AppStyle.cardPadding)
                             } else {
                                 NoWorkoutScheduledCard()
-                                    .padding(.horizontal, 16)
+                                    .padding(.horizontal, AppStyle.cardPadding)
                             }
                         } else {
                             NoWorkoutScheduledCard()
-                                .padding(.horizontal, 16)
+                                .padding(.horizontal, AppStyle.cardPadding)
                         }
-                        
-                        // Quick Actions
-                        QuickActionsGrid(
-                            onProgressPhotoTap: { showingProgressPhotoUpload = true },
-                            onWeightUpdateTap: { showingWeightUpdate = true },
-                            onGoalUpdateTap: { showingGoalUpdate = true }
-                        )
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 20)
                     }
                     .padding(.top, 10)
                 }
@@ -167,30 +139,12 @@ struct HomeView: View {
                 selectedWorkoutDay: newSelectedDay
             )
         }
-        .sheet(isPresented: $showingProgressPhotoUpload) {
-            ProgressPhotoUploadView(
-                selectedImage: $selectedImage,
-                onDismiss: { showingProgressPhotoUpload = false }
-            )
-            .environmentObject(workoutStore)
-        }
-        .sheet(isPresented: $showingWeightUpdate) {
-            WeightUpdateView(
-                bodyWeight: $bodyWeight,
-                onDismiss: { showingWeightUpdate = false }
-            )
-            .environmentObject(workoutStore)
-            .environmentObject(userProfileStore)
-        }
-        .sheet(isPresented: $showingGoalUpdate) {
-            GoalUpdateView(
-                onDismiss: { showingGoalUpdate = false }
-            )
-            .environmentObject(userProfileStore)
-        }
         .sheet(isPresented: $showingWorkoutDetail) {
             if let workout = selectedWorkout {
-                WorkoutDetailView(workout: workout)
+                WorkoutDetailView(workout: workout) {
+                    showingWorkoutDetail = false
+                    selectedWorkout = nil
+                }
             }
         }
         .sheet(isPresented: $showingSettings) {
@@ -330,7 +284,7 @@ struct TodayWorkoutCard: View {
                             .onDelete(perform: removeExercise)
                         }
                         .listStyle(PlainListStyle())
-                        .frame(height: max(CGFloat(editedExercises.count * 60), 240)) // Minimum height for 4 rows
+                        .frame(height: max(CGFloat(editedExercises.count * 70), 240)) // Increase height to show more rows
                         
                         
                         // Fallback if no exercises are loaded
@@ -446,9 +400,10 @@ struct TodayWorkoutCard: View {
                 }
             }
         }
-        .padding(24)
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(20)
+        .padding(AppStyle.cardPadding)
+        .background(AppStyle.cardBackground)
+        .cornerRadius(AppStyle.cardCornerRadius)
+        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
         .onAppear {
             // Check if there's an active workout for today and use that data
             let today = Calendar.current.startOfDay(for: Date())
@@ -677,64 +632,11 @@ struct NoWorkoutScheduledCard: View {
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
         }
-        .padding()
+        .padding(AppStyle.cardPadding)
         .frame(maxWidth: .infinity)
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(15)
-    }
-}
-
-struct QuickActionButton: View {
-    let title: String
-    let systemImage: String
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                Image(systemName: systemImage)
-                    .font(.title)
-                    .foregroundColor(Color("AccentColor"))
-                Text(title)
-                    .font(.caption)
-                    .bold()
-                    .foregroundColor(Color("AccentColor"))
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding()
-        }
-        .frame(height: 120)
-    }
-}
-
-struct QuickActionsGrid: View {
-    let onProgressPhotoTap: () -> Void
-    let onWeightUpdateTap: () -> Void
-    let onGoalUpdateTap: () -> Void
-    
-    var body: some View {
-        HStack(spacing: 15) {
-            QuickActionButton(
-                title: "Progress Photo",
-                systemImage: "camera.fill",
-                action: onProgressPhotoTap
-            )
-            QuickActionButton(
-                title: "Update Weight",
-                systemImage: "scalemass.fill",
-                action: onWeightUpdateTap
-            )
-            QuickActionButton(
-                title: "Update Goals",
-                systemImage: "target",
-                action: onGoalUpdateTap
-            )
-        }
-        .padding()
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(15)
+        .background(AppStyle.cardBackground)
+        .cornerRadius(AppStyle.cardCornerRadius)
+        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
     }
 }
 
@@ -858,60 +760,83 @@ struct ExerciseEditorView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                if let workout = workoutDay {
-                    Text("Add Exercises to \(workout.name)")
-                        .font(.headline)
-                        .padding()
-                    
-                    VStack(spacing: 16) {
-                        TextField("Exercise Name", text: $exerciseName)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
+            ScrollView {
+                VStack(spacing: 16) {
+                    if let workout = workoutDay {
+                        Text("Add Exercises to \(workout.name)")
+                            .font(.headline)
+                            .padding(.top, 8)
                         
-                        HStack {
-                            TextField("Weight (e.g., 225, 225, 220)", text: $weightString)
+                        VStack(spacing: 12) {
+                            TextField("Exercise Name", text: $exerciseName)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .keyboardType(.numbersAndPunctuation)
                             
-                            TextField("Reps (e.g., 7, 6, 9)", text: $repsString)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .keyboardType(.numbersAndPunctuation)
+                            HStack {
+                                TextField("Weight (e.g., 225, 225, 220)", text: $weightString)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .keyboardType(.numbersAndPunctuation)
+                                
+                                TextField("Reps (e.g., 7, 6, 9)", text: $repsString)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .keyboardType(.numbersAndPunctuation)
+                            }
+                            
+                            Button("Add Exercise") {
+                                addExercise()
+                            }
+                            .disabled(exerciseName.isEmpty)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.accentColor)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
                         }
-                        
-                        Button("Add Exercise") {
-                            addExercise()
-                        }
-                        .disabled(exerciseName.isEmpty)
                         .padding()
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                    }
-                    .padding()
-                    
-                    List {
-                        ForEach(exercises) { exercise in
-                            VStack(alignment: .leading) {
-                                Text(exercise.name)
-                                    .font(.headline)
-                                if let weight = exercise.weightString, !weight.isEmpty {
-                                    Text("Weight: \(weight)")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                        .background(AppStyle.cardBackground)
+                        .cornerRadius(AppStyle.cardCornerRadius)
+                        .shadow(color: AppStyle.cardShadow, radius: 8, x: 0, y: 4)
+                        
+                        LazyVStack(spacing: 12) {
+                            ForEach(exercises) { exercise in
+                                HStack(spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(exercise.name)
+                                            .font(.headline)
+                                        HStack(spacing: 8) {
+                                            if let weight = exercise.weightString, !weight.isEmpty {
+                                                Text("W: \(weight)")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            if let reps = exercise.repsString, !reps.isEmpty {
+                                                Text("R: \(reps)")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                    }
+                                    Spacer()
+                                    Button(role: .destructive) {
+                                        if let index = exercises.firstIndex(where: { $0.id == exercise.id }) {
+                                            deleteExercise(at: IndexSet(integer: index))
+                                        }
+                                    } label: {
+                                        Image(systemName: "trash")
+                                            .foregroundColor(.red)
+                                    }
                                 }
-                                if let reps = exercise.repsString, !reps.isEmpty {
-                                    Text("Reps: \(reps)")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
+                                .padding(AppStyle.cardPadding)
+                                .background(AppStyle.cardBackground)
+                                .cornerRadius(AppStyle.cardCornerRadius)
+                                .shadow(color: AppStyle.cardShadow, radius: 6, x: 0, y: 3)
                             }
                         }
-                        .onDelete(perform: deleteExercise)
+                    } else {
+                        Text("No workout selected")
+                            .foregroundColor(.secondary)
                     }
-                } else {
-                    Text("No workout selected")
-                        .foregroundColor(.secondary)
                 }
+                .padding(AppStyle.cardPadding)
             }
             .navigationTitle("Add Exercises")
             .navigationBarTitleDisplayMode(.inline)

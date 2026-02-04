@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		71F000012F1A000100000001 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000042F1A000100000004 /* HeaderView.swift */; };
+		71F000022F1A000100000002 /* SharedStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000052F1A000100000005 /* SharedStyle.swift */; };
+		71F000032F1A000100000003 /* QuickActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000062F1A000100000006 /* QuickActions.swift */; };
 		71875A3D2DAE1A7D00B207E8 /* ProgressPhotoUploadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71875A372DAE1A7D00B207E8 /* ProgressPhotoUploadView.swift */; };
 		71875A3E2DAE1A7D00B207E8 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71875A332DAE1A7D00B207E8 /* ImagePicker.swift */; };
 		71875A3F2DAE1A7D00B207E8 /* NewWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71875A352DAE1A7D00B207E8 /* NewWorkoutView.swift */; };
@@ -41,6 +44,9 @@
 
 /* Begin PBXFileReference section */
 		716BB2B42D939211008B2C98 /* increment_app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = increment_app.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		71F000042F1A000100000004 /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
+		71F000052F1A000100000005 /* SharedStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStyle.swift; sourceTree = "<group>"; };
+		71F000062F1A000100000006 /* QuickActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActions.swift; sourceTree = "<group>"; };
 		71875A252DAE1A7D00B207E8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		71875A272DAE1A7D00B207E8 /* increment_app.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = increment_app.entitlements; sourceTree = "<group>"; };
 		71875A282DAE1A7D00B207E8 /* increment_appApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = increment_appApp.swift; sourceTree = "<group>"; };
@@ -132,6 +138,9 @@
 		71875A3C2DAE1A7D00B207E8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				71F000042F1A000100000004 /* HeaderView.swift */,
+				71F000052F1A000100000005 /* SharedStyle.swift */,
+				71F000062F1A000100000006 /* QuickActions.swift */,
 				71875A2F2DAE1A7D00B207E8 /* AddExerciseView.swift */,
 				71DE61672E863F000019F324 /* AuthenticationView.swift */,
 				71875A302DAE1A7D00B207E8 /* CalendarView.swift */,
@@ -232,6 +241,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				71F000012F1A000100000001 /* HeaderView.swift in Sources */,
+				71F000022F1A000100000002 /* SharedStyle.swift in Sources */,
+				71F000032F1A000100000003 /* QuickActions.swift in Sources */,
 				71875A3D2DAE1A7D00B207E8 /* ProgressPhotoUploadView.swift in Sources */,
 				71875A3E2DAE1A7D00B207E8 /* ImagePicker.swift in Sources */,
 				71875A3F2DAE1A7D00B207E8 /* NewWorkoutView.swift in Sources */,

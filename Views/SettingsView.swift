@@ -11,18 +11,13 @@ struct SettingsView: View {
     @State private var showingProfileEditor = false
     
     var body: some View {
-        VStack(spacing: 0) {
-            // App title at the top
-            Text("INCREMENT")
-                .font(.system(size: 16, weight: .bold, design: .default))
-                .italic()
-                .foregroundColor(Color(red: 11/255, green: 20/255, blue: 64/255))
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 10)
-                .padding(.top, 20)
-            
-            NavigationView {
-                List {
+        ZStack {
+            AppStyle.canvas.ignoresSafeArea()
+            VStack(spacing: 0) {
+                HeaderView(title: "Settings", subtitle: nil, showTitle: false)
+                
+                NavigationView {
+                    List {
                     if let profile = userProfileStore.profile {
                         Section {
                             HStack {
@@ -85,9 +80,9 @@ struct SettingsView: View {
                         .foregroundColor(.red)
                     }
                     
-                    .background(Color.white)
-                    .navigationTitle("Settings")
-                    .onChange(of: selectedItem) { item in
+                        .background(AppStyle.surface)
+                        .navigationTitle("Settings")
+                        .onChange(of: selectedItem) { item in
                         Task {
                             if let data = try? await item?.loadTransferable(type: Data.self) {
                                 userProfileStore.updateProfileImage(data)
@@ -102,8 +97,9 @@ struct SettingsView: View {
                         WorkoutSplitEditorView()
                             .environmentObject(userProfileStore)
                     }
+                    }
+                    .scrollContentBackground(.hidden)
                 }
-                .scrollContentBackground(.hidden)
             }
         }
     }

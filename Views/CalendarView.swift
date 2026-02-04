@@ -2,10 +2,15 @@ import SwiftUI
 
 struct CalendarView: View {
     @EnvironmentObject var workoutStore: WorkoutStore
+    @EnvironmentObject var userProfileStore: UserProfileStore
     @State private var selectedDate = Date()
     @State private var showingWorkoutDetail = false
     @State private var selectedWorkout: Workout?
     @State private var showingFullScreenImage = false
+    @State private var showingProgressPhotoUpload = false
+    @State private var showingWeightUpdate = false
+    @State private var selectedImage: UIImage?
+    @State private var bodyWeight: String = ""
     
     private var datesWithWorkouts: Set<Date> {
         let dates = Workout.datesWithWorkouts(workoutStore.workouts)
@@ -18,64 +23,58 @@ struct CalendarView: View {
     
     var body: some View {
         ZStack {
-            Color.white.ignoresSafeArea()
+            AppStyle.canvas.ignoresSafeArea()
             VStack(spacing: 0) {
-                // Fixed header - doesn't scroll
-                VStack(spacing: 8) {
-                    Text("INCREMENT")
-                        .font(.system(size: 16, weight: .bold, design: .default))
-                        .italic()
-                        .foregroundColor(Color(red: 11/255, green: 20/255, blue: 64/255))
-                    
-                    Text("Calendar")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.primary)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 10)
-                .padding(.top, 20)
-                .background(Color.white)
+                HeaderView(title: "Calendar", subtitle: nil, showTitle: false)
                 
-                // Scrollable content - only this part scrolls
-                ScrollView {
-                    VStack(spacing: 16) {
-                        // Calendar
+                List {
+                    Section {
                         CalendarViewComponent(
                             selectedDate: $selectedDate,
                             datesWithWorkouts: datesWithWorkouts
                         )
-                        .padding(.horizontal, 16)
-                        
-                        // Workouts for selected date
-                        VStack(alignment: .leading, spacing: 8) {
-                            if workoutsForSelectedDate.isEmpty {
-                                Text("No workouts recorded")
-                                    .foregroundColor(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding(.vertical, 40)
-                            } else {
-                                ForEach(workoutsForSelectedDate) { workout in
-                                    Button(action: {
+                        .padding(.horizontal, AppStyle.cardPadding)
+                        .padding(.vertical, AppStyle.cardPadding)
+                        .background(Color.white)
+                        .cornerRadius(AppStyle.cardCornerRadius)
+                        .shadow(color: AppStyle.cardShadow, radius: 8, x: 0, y: 4)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(AppStyle.canvas)
+                    }
+                    .listRowSeparator(.hidden)
+                    
+                    Section {
+                        if workoutsForSelectedDate.isEmpty {
+                            Text("No workouts recorded")
+                                .foregroundColor(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding(.vertical, 40)
+                                .listRowInsets(EdgeInsets())
+                                .listRowBackground(AppStyle.canvas)
+                        } else {
+                            ForEach(workoutsForSelectedDate) { workout in
+                                WorkoutHistoryRow(workout: workout)
+                                    .padding(.horizontal, AppStyle.cardPadding)
+                                    .padding(.vertical, 12)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(AppStyle.cardBackground)
+                                    .cornerRadius(AppStyle.cardCornerRadius)
+                                    .shadow(color: AppStyle.cardShadow, radius: 8, x: 0, y: 4)
+                                    .foregroundColor(.primary)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
                                         selectedWorkout = workout
                                         if workout.name == "Progress Photo" {
                                             showingFullScreenImage = true
                                         } else if workout.name == "Weight Update" {
-                                            // Weight updates don't show popup - do nothing
                                             return
                                         } else {
                                             showingWorkoutDetail = true
                                         }
-                                    }) {
-                                        WorkoutHistoryRow(workout: workout)
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 8)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .background(Color.white)
-                                            .cornerRadius(8)
-                                            .foregroundColor(.primary)
                                     }
-                                    .buttonStyle(PlainButtonStyle())
-                                    .contextMenu {
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowBackground(AppStyle.canvas)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                         Button(role: .destructive) {
                                             if let index = workoutsForSelectedDate.firstIndex(where: { $0.id == workout.id }) {
                                                 deleteWorkouts(at: IndexSet(integer: index))
@@ -84,14 +83,35 @@ struct CalendarView: View {
                                             Label("Delete", systemImage: "trash")
                                         }
                                     }
-                                }
                             }
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 20)
                     }
-                    .padding(.top, 10)
+                    .listRowSeparator(.hidden)
+                    
+                    Section {
+                        HStack(spacing: 15) {
+                            QuickActionButton(
+                                title: "Progress Photo",
+                                systemImage: "camera.fill",
+                                action: { showingProgressPhotoUpload = true }
+                            )
+                            QuickActionButton(
+                                title: "Update Weight",
+                                systemImage: "scalemass.fill",
+                                action: { showingWeightUpdate = true }
+                            )
+                        }
+                        .padding(AppStyle.cardPadding)
+                        .background(AppStyle.cardBackground)
+                        .cornerRadius(AppStyle.cardCornerRadius)
+                        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(AppStyle.canvas)
+                    }
+                    .listRowSeparator(.hidden)
                 }
+                .listStyle(PlainListStyle())
+                .scrollContentBackground(.hidden)
             }
             
             // Modal overlays (on top of everything)
@@ -119,6 +139,19 @@ struct CalendarView: View {
                                         .foregroundColor(.primary)
                                     
                                     Spacer()
+                                    
+                                    Button(action: {
+                                        withAnimation {
+                                            showingFullScreenImage = false
+                                            selectedWorkout = nil
+                                        }
+                                    }) {
+                                        Image(systemName: "xmark")
+                                            .foregroundColor(.secondary)
+                                            .padding(6)
+                                            .background(Color(.systemGray5))
+                                            .clipShape(Circle())
+                                    }
                                 }
                                 .padding()
                                 
@@ -167,44 +200,37 @@ struct CalendarView: View {
                     }
                 }
             
-            if showingWorkoutDetail,
-                   let workout = selectedWorkout {
-                    // Workout detail overlay
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                        .onTapGesture {
-                            withAnimation {
-                                showingWorkoutDetail = false
-                                selectedWorkout = nil
-                            }
-                        }
-                    
-                    GeometryReader { geometry in
-                        VStack {
-                            WorkoutDetailView(workout: workout) {
-                                withAnimation {
-                                    showingWorkoutDetail = false
-                                    selectedWorkout = nil
-                                }
-                            }
-                            .environmentObject(workoutStore)
-                            .frame(width: UIScreen.main.bounds.width * 0.85)
-                            .frame(maxHeight: geometry.size.height * 0.7)
-                            .background(Color.white)
-                            .cornerRadius(15)
-                            .background(Color.gray.opacity(0.2))
-                        }
-                        .position(
-                            x: geometry.size.width / 2,
-                            y: geometry.size.height / 2
-                        )
-                    }
-                }
-            }
+        }
         .onAppear {
             // Ensure we have the latest workout data
             Task {
                 try? await workoutStore.load()
+            }
+        }
+        .sheet(isPresented: $showingProgressPhotoUpload) {
+            ProgressPhotoUploadView(
+                selectedImage: $selectedImage,
+                onDismiss: { showingProgressPhotoUpload = false }
+            )
+            .environmentObject(workoutStore)
+        }
+        .sheet(isPresented: $showingWeightUpdate) {
+            WeightUpdateView(
+                bodyWeight: $bodyWeight,
+                onDismiss: { showingWeightUpdate = false }
+            )
+            .environmentObject(workoutStore)
+            .environmentObject(userProfileStore)
+        }
+        .sheet(isPresented: $showingWorkoutDetail) {
+            if let workout = selectedWorkout {
+                WorkoutDetailView(workout: workout) {
+                    showingWorkoutDetail = false
+                    selectedWorkout = nil
+                }
+                    .environmentObject(workoutStore)
+                    .presentationDetents([.medium, .large])
+                    .presentationCornerRadius(20)
             }
         }
     }
@@ -235,11 +261,15 @@ struct CalendarViewComponent: View {
                             .imageScale(.large)
                             .padding(8)
                     }
+                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
                     Button(action: nextMonth) {
                         Image(systemName: "chevron.right")
                             .imageScale(.large)
                             .padding(8)
                     }
+                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
                 }
             }
             
@@ -324,15 +354,14 @@ struct DayCell: View {
             Circle()
                 .fill(isSelected ? Color(red: 0.043, green: 0.063, blue: 0.282) : Color.clear)
             
-            VStack {
-                Text("\(Calendar.current.component(.day, from: date))")
-                    .foregroundColor(isSelected ? .white : .primary)
-                
-                if hasWorkout {
-                    Circle()
-                        .fill(isSelected ? .white : Color(red: 0.043, green: 0.063, blue: 0.282))
-                        .frame(width: 4, height: 4)
-                }
+            Text("\(Calendar.current.component(.day, from: date))")
+                .foregroundColor(isSelected ? .white : .primary)
+            
+            if hasWorkout {
+                Circle()
+                    .fill(isSelected ? .white : Color(red: 0.043, green: 0.063, blue: 0.282))
+                    .frame(width: 4, height: 4)
+                    .offset(y: 10)
             }
         }
         .aspectRatio(1, contentMode: .fill)

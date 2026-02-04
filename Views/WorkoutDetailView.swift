@@ -37,14 +37,28 @@ struct WorkoutDetailView: View {
         VStack(spacing: 8) {
             // Header
             HStack {
-                Text(workout.name)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(workout.name)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.primary)
+                    Text(workout.formattedDate)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
                 Spacer()
-                // Edit functionality removed - workouts cannot be edited from calendar view
+                Button(action: {
+                    dismiss()
+                    onDismiss()
+                }) {
+                    Image(systemName: "xmark")
+                        .foregroundColor(.secondary)
+                        .padding(6)
+                        .background(Color(.systemGray5))
+                        .clipShape(Circle())
+                }
             }
             .padding(.horizontal)
-            .padding(.top, 8)
+            .padding(.top, 12)
             
             // Content
             List {
@@ -55,7 +69,7 @@ struct WorkoutDetailView: View {
                     }
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                .listRowBackground(Color.clear)
+                .listRowBackground(AppStyle.cardBackground)
                 
                 if workout.name == "Progress Photo" {
                     if let photoURL = workout.progressPhotoURL,
@@ -69,7 +83,7 @@ struct WorkoutDetailView: View {
                         }
                         .frame(maxHeight: 300)
                         .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
+                        .listRowBackground(AppStyle.cardBackground)
                         .onTapGesture {
                             showingFullScreenImage = true
                         }
@@ -132,10 +146,10 @@ struct WorkoutDetailView: View {
                                             .foregroundColor(.primary)
                                     }
                                 }
-                                .padding(.vertical, 4)
-                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .padding(.horizontal, 10)
                                 .background(Color(.systemGray6))
-                                .cornerRadius(8)
+                                .cornerRadius(10)
                             }
                             
                             if editMode == .active {
@@ -147,13 +161,14 @@ struct WorkoutDetailView: View {
                         }
                         .padding(.horizontal)
                         .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
+                        .listRowBackground(AppStyle.cardBackground)
                         .listRowSeparator(.hidden)
                     }
                 }
             }
             .listStyle(PlainListStyle())
             .scrollContentBackground(.hidden)
+            .background(AppStyle.canvas)
             
             // Footer
             HStack(spacing: 12) {
@@ -161,6 +176,7 @@ struct WorkoutDetailView: View {
                     if editMode == .active {
                         cancelEditing()
                     }
+                    dismiss()
                     onDismiss()
                 }
                 .foregroundColor(.white)

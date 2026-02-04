@@ -5,6 +5,7 @@ struct ProgressView: View {
     @EnvironmentObject var userProfileStore: UserProfileStore
     @State private var showingEditBodyWeight = false
     @State private var showingEditExerciseGoal: ExerciseGoal? = nil
+    @State private var showingGoalUpdate = false
 
     private func exerciseData(for exerciseName: String) -> [(Date, Double)] {
         return workoutStore.workouts
@@ -29,78 +30,73 @@ struct ProgressView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // App title at the top
-            Text("INCREMENT")
-                .font(.system(size: 16, weight: .bold, design: .default))
-                .italic()
-                .foregroundColor(Color(red: 11/255, green: 20/255, blue: 64/255))
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 10)
-                .padding(.top, 20)
-            
-            NavigationView {
-                if let profile = userProfileStore.profile {
-                    List {
-                        // Body Weight Progress
-                        if let bodyWeightGoal = profile.bodyWeightGoal {
-                            GoalCard(
-                                title: "Body Weight Goal",
-                                current: bodyWeightGoal.currentWeight,
-                                target: bodyWeightGoal.targetWeight,
-                                percentage: bodyWeightGoal.progressPercentage,
-                                data: bodyWeightData
-                            )
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
-                            .onTapGesture {
-                                showingEditBodyWeight = true
+        ZStack {
+            AppStyle.canvas.ignoresSafeArea()
+            VStack(spacing: 0) {
+                HeaderView(title: "Progress", subtitle: nil, showTitle: false)
+                
+                ScrollView {
+                    VStack(spacing: AppStyle.sectionSpacing) {
+                        Button(action: { showingGoalUpdate = true }) {
+                            HStack {
+                                Image(systemName: "target")
+                                    .font(.title2)
+                                Text("Update Goals")
+                                    .font(.headline)
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button("Delete", role: .destructive) {
-                                    deleteBodyWeightGoal()
-                                }
-                            }
+                            .foregroundColor(AppStyle.brandBlue)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
                         }
+                        .padding(.horizontal, AppStyle.cardPadding)
+                        .background(AppStyle.cardBackground)
+                        .cornerRadius(AppStyle.cardCornerRadius)
+                        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
+                        .padding(.horizontal, AppStyle.cardPadding)
                         
-                        // Exercise Goals
-                        ForEach(profile.goals) { goal in
-                            ExerciseGoalCard(
-                                title: goal.exerciseName,
-                                current: goal.currentWeight,
-                                target: goal.targetWeight,
-                                percentage: calculateProgress(current: goal.currentWeight, target: goal.targetWeight)
-                            )
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
-                            .onTapGesture {
-                                showingEditExerciseGoal = goal
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button("Delete", role: .destructive) {
-                                    deleteExerciseGoal(goal)
+                        if let profile = userProfileStore.profile {
+                            VStack(spacing: AppStyle.sectionSpacing) {
+                                if let bodyWeightGoal = profile.bodyWeightGoal {
+                                    GoalCard(
+                                        title: "Body Weight Goal",
+                                        current: bodyWeightGoal.currentWeight,
+                                        target: bodyWeightGoal.targetWeight,
+                                        percentage: bodyWeightGoal.progressPercentage,
+                                        data: bodyWeightData
+                                    )
+                                    .onTapGesture {
+                                        showingEditBodyWeight = true
+                                    }
+                                }
+                                
+                                ForEach(profile.goals) { goal in
+                                    ExerciseGoalCard(
+                                        title: goal.exerciseName,
+                                        current: goal.currentWeight,
+                                        target: goal.targetWeight,
+                                        percentage: calculateProgress(current: goal.currentWeight, target: goal.targetWeight)
+                                    )
+                                    .onTapGesture {
+                                        showingEditExerciseGoal = goal
+                                    }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button("Delete", role: .destructive) {
+                                            deleteExerciseGoal(goal)
+                                        }
+                                    }
                                 }
                             }
+                            .padding(.horizontal, AppStyle.cardPadding)
+                        } else {
+                            Text("No profile found")
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, AppStyle.cardPadding)
                         }
                     }
-                    .listStyle(PlainListStyle())
-                    .scrollContentBackground(.hidden)
-                    .background(Color.white)
-                } else {
-                    List {
-                        Text("No profile found")
-                            .foregroundColor(.secondary)
-                    }
-                    .listStyle(PlainListStyle())
-                    .scrollContentBackground(.hidden)
-                    .background(Color.white)
+                    .padding(.top, 10)
                 }
             }
-            .navigationTitle("Progress")
         }
-        .background(Color.white)
         .sheet(isPresented: $showingEditBodyWeight) {
             if let bodyWeightGoal = userProfileStore.profile?.bodyWeightGoal {
                 EditBodyWeightGoalView(
@@ -117,6 +113,12 @@ struct ProgressView: View {
                 ),
                 initialGoal: goal
             )
+        }
+        .sheet(isPresented: $showingGoalUpdate) {
+            GoalUpdateView(
+                onDismiss: { showingGoalUpdate = false }
+            )
+            .environmentObject(userProfileStore)
         }
     }
     
@@ -192,9 +194,10 @@ struct ExerciseGoalCard: View {
             }
             .frame(height: 10)
         }
-        .padding()
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(15)
+        .padding(AppStyle.cardPadding)
+        .background(AppStyle.cardBackground)
+        .cornerRadius(AppStyle.cardCornerRadius)
+        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
     }
 }
 
@@ -230,9 +233,10 @@ struct GoalCard: View {
             }
             .frame(height: 10)
         }
-        .padding()
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(15)
+        .padding(AppStyle.cardPadding)
+        .background(AppStyle.cardBackground)
+        .cornerRadius(AppStyle.cardCornerRadius)
+        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
     }
 }
 
