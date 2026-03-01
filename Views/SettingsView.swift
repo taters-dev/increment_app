@@ -8,7 +8,6 @@ struct SettingsView: View {
     @State private var showingImagePicker = false
     @State private var selectedItem: PhotosPickerItem?
     @State private var showingWorkoutSplitEditor = false
-    @State private var showingProfileEditor = false
     @State private var showingWorkoutsGoalEditor = false
     
     var body: some View {
@@ -53,11 +52,6 @@ struct SettingsView: View {
                     }
                     
                     Section {
-                        Button(action: { showingProfileEditor = true }) {
-                            Label("Edit Profile", systemImage: "person")
-                        }
-                        .foregroundColor(.primary)
-                        
                         PhotosPicker(selection: $selectedItem,
                                      matching: .images) {
                             Label("Change Profile Picture", systemImage: "photo")
@@ -88,16 +82,12 @@ struct SettingsView: View {
                     
                         .background(AppStyle.surface)
                         .navigationTitle("Settings")
-                        .onChange(of: selectedItem) { _, item in
+                    .onChange(of: selectedItem) { _, item in
                         Task {
                             if let data = try? await item?.loadTransferable(type: Data.self) {
                                 userProfileStore.updateProfileImage(data)
                             }
                         }
-                    }
-                    .sheet(isPresented: $showingProfileEditor) {
-                        ProfileEditorView()
-                            .environmentObject(userProfileStore)
                     }
                     .sheet(isPresented: $showingWorkoutSplitEditor) {
                         WorkoutSplitEditorView()
@@ -115,64 +105,6 @@ struct SettingsView: View {
     }
 }
 
-
-struct ProfileEditorView: View {
-    @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var userProfileStore: UserProfileStore
-    @State private var name = ""
-    @State private var email = ""
-    @State private var bio = ""
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Profile Information")) {
-                    TextField("Name", text: $name)
-                    TextField("Email", text: $email)
-                        .textContentType(.emailAddress)
-                        .autocapitalization(.none)
-                    TextField("Bio", text: $bio, axis: .vertical)
-                        .lineLimit(3...6)
-                }
-            }
-            .navigationTitle("Edit Profile")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        saveProfile()
-                        dismiss()
-                    }
-                    .disabled(name.isEmpty || email.isEmpty)
-                }
-            }
-            .onAppear {
-                if let profile = userProfileStore.profile {
-                    name = profile.name
-                    email = profile.email
-                    bio = profile.bio
-                }
-            }
-        }
-    }
-    
-    private func saveProfile() {
-        if var profile = userProfileStore.profile {
-            profile.name = name
-            profile.email = email
-            profile.bio = bio
-            userProfileStore.profile = profile
-            Task {
-                await userProfileStore.saveProfile()
-            }
-        }
-    }
-}
 
 struct WorkoutSplitEditorView: View {
     @Environment(\.dismiss) private var dismiss
