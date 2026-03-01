@@ -71,7 +71,7 @@ struct ProgressPhotoUploadView: View {
         .frame(width: UIScreen.main.bounds.width * 0.85)
         .background(Color.gray.opacity(0.1))
         .cornerRadius(15)
-        .onChange(of: selectedItem) { item in
+        .onChange(of: selectedItem) { _, item in
             Task {
                 if let data = try? await item?.loadTransferable(type: Data.self),
                    let image = UIImage(data: data) {
@@ -85,7 +85,9 @@ struct ProgressPhotoUploadView: View {
     }
     
     private func saveProgressPhoto() {
-        guard let imageData = selectedImage?.jpegData(compressionQuality: 0.8) else { return }
+        guard let image = selectedImage else { return }
+        let resizedImage = image.scaledDown(maxDimension: 1600)
+        guard let imageData = resizedImage.jpegData(compressionQuality: 0.7) else { return }
         
         let today = Calendar.current.startOfDay(for: Date())
         var workoutId: UUID?

@@ -13,7 +13,13 @@ struct increment_appApp: App {
     @StateObject private var userProfileStore = UserProfileStore()
     @StateObject private var workoutStore = WorkoutStore()
     @StateObject private var appStateManager = AppStateManager()
-    
+    @StateObject private var toastManager = ToastManager()
+
+    init() {
+        // Inject ToastManager into stores after initialization
+        // This is done here to ensure @StateObject is initialized first
+    }
+
     var body: some Scene {
         WindowGroup {
             Group {
@@ -37,8 +43,41 @@ struct increment_appApp: App {
             .environmentObject(userProfileStore)
             .environmentObject(workoutStore)
             .environmentObject(appStateManager)
+            .environmentObject(toastManager)
+            .onAppear {
+                // Inject ToastManager into stores after view appears
+                workoutStore.toastManager = toastManager
+                userProfileStore.toastManager = toastManager
+            }
+            .overlay(alignment: .top) {
+                // Error banner at top
+                if let error = toastManager.currentError {
+                    ErrorBanner(error: error) {
+                        toastManager.dismissError()
+                    }
+                    .padding(.top, 8)
+                    .animation(.spring(), value: toastManager.currentError != nil)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
+                // Success banner at top
+                if let message = toastManager.successMessage {
+                    SuccessBanner(message: message) {
+                        toastManager.dismissSuccess()
+                    }
+                    .padding(.top, 8)
+                    .animation(.spring(), value: toastManager.successMessage != nil)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .overlay {
+                // Loading overlay (full screen)
+                if toastManager.isLoading {
+                    LoadingOverlay(message: toastManager.loadingMessage)
+                }
+            }
             .preferredColorScheme(.light)
-            .onChange(of: authManager.isAuthenticated) { isAuthenticated in
+            .onChange(of: authManager.isAuthenticated) { _, isAuthenticated in
                 if isAuthenticated {
                     // Reset stores when user signs in/up
                     userProfileStore.reset()

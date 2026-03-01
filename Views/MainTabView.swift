@@ -17,7 +17,7 @@ struct MainTabView: View {
                     Label("Calendar", systemImage: "calendar")
                 }
             
-            ProgressView()
+            ProgressDashboardView()
                 .tabItem {
                     Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
                 }
@@ -37,7 +37,7 @@ struct MainTabView: View {
             }
             
             // Restore app state after local data is loaded
-            let (selectedWorkoutDay, shouldRestoreActiveWorkout) = appStateManager.restoreState(
+            _ = appStateManager.restoreState(
                 workoutStore: workoutStore,
                 userProfileStore: userProfileStore
             )

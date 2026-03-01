@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ProgressView: View {
+struct ProgressDashboardView: View {
     @EnvironmentObject var workoutStore: WorkoutStore
     @EnvironmentObject var userProfileStore: UserProfileStore
     @State private var showingEditBodyWeight = false
@@ -241,7 +241,7 @@ struct GoalCard: View {
 }
 
 #Preview {
-    ProgressView()
+    ProgressDashboardView()
         .environmentObject(WorkoutStore())
         .environmentObject(UserProfileStore())
 } 

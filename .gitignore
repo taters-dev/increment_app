@@ -100,6 +100,10 @@ iOSInjectionProject/
 .env.production.local
 Config.plist
 
+# Xcode configuration files with credentials
+Config/Debug.xcconfig
+Config/Release.xcconfig
+
 # Supabase
 supabase/.branches
 supabase/.temp

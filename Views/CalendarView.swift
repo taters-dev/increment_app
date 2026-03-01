@@ -20,10 +20,11 @@ struct CalendarView: View {
     private var workoutsForSelectedDate: [Workout] {
         Workout.workoutsForDate(selectedDate, workouts: workoutStore.workouts)
     }
+
     
     var body: some View {
         ZStack {
-            AppStyle.canvas.ignoresSafeArea()
+            Color.white.ignoresSafeArea()
             VStack(spacing: 0) {
                 HeaderView(title: "Calendar", subtitle: nil, showTitle: false)
                 
@@ -39,18 +40,15 @@ struct CalendarView: View {
                         .cornerRadius(AppStyle.cardCornerRadius)
                         .shadow(color: AppStyle.cardShadow, radius: 8, x: 0, y: 4)
                         .listRowInsets(EdgeInsets())
-                        .listRowBackground(AppStyle.canvas)
+                        .listRowBackground(Color.clear)
                     }
                     .listRowSeparator(.hidden)
                     
                     Section {
                         if workoutsForSelectedDate.isEmpty {
-                            Text("No workouts recorded")
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .padding(.vertical, 40)
+                            EmptyView()
                                 .listRowInsets(EdgeInsets())
-                                .listRowBackground(AppStyle.canvas)
+                                .listRowBackground(Color.clear)
                         } else {
                             ForEach(workoutsForSelectedDate) { workout in
                                 WorkoutHistoryRow(workout: workout)
@@ -73,7 +71,7 @@ struct CalendarView: View {
                                         }
                                     }
                                     .listRowInsets(EdgeInsets())
-                                    .listRowBackground(AppStyle.canvas)
+                                    .listRowBackground(Color.clear)
                                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                         Button(role: .destructive) {
                                             if let index = workoutsForSelectedDate.firstIndex(where: { $0.id == workout.id }) {
@@ -87,31 +85,36 @@ struct CalendarView: View {
                         }
                     }
                     .listRowSeparator(.hidden)
-                    
-                    Section {
-                        HStack(spacing: 15) {
-                            QuickActionButton(
-                                title: "Progress Photo",
-                                systemImage: "camera.fill",
-                                action: { showingProgressPhotoUpload = true }
-                            )
-                            QuickActionButton(
-                                title: "Update Weight",
-                                systemImage: "scalemass.fill",
-                                action: { showingWeightUpdate = true }
-                            )
-                        }
-                        .padding(AppStyle.cardPadding)
-                        .background(AppStyle.cardBackground)
-                        .cornerRadius(AppStyle.cardCornerRadius)
-                        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(AppStyle.canvas)
-                    }
-                    .listRowSeparator(.hidden)
+                    .padding(.top, AppStyle.sectionSpacing)
                 }
                 .listStyle(PlainListStyle())
                 .scrollContentBackground(.hidden)
+            }
+            .safeAreaInset(edge: .bottom) {
+                HStack(spacing: 15) {
+                    QuickActionButton(
+                        title: "Progress Photo",
+                        systemImage: "camera.fill",
+                        action: { showingProgressPhotoUpload = true }
+                    )
+                    .frame(maxWidth: .infinity, minHeight: 88)
+                    .background(AppStyle.cardBackground)
+                    .cornerRadius(AppStyle.cardCornerRadius)
+                    .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
+
+                    QuickActionButton(
+                        title: "Update Weight",
+                        systemImage: "scalemass.fill",
+                        action: { showingWeightUpdate = true }
+                    )
+                    .frame(maxWidth: .infinity, minHeight: 88)
+                    .background(AppStyle.cardBackground)
+                    .cornerRadius(AppStyle.cardCornerRadius)
+                    .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
+                }
+                .padding(.horizontal, AppStyle.cardPadding)
+                .padding(.bottom, 6)
+                .background(Color.white.ignoresSafeArea(edges: .bottom))
             }
             
             // Modal overlays (on top of everything)

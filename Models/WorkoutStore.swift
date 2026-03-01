@@ -5,27 +5,47 @@ import Supabase
 class WorkoutStore: ObservableObject {
     @Published var workouts: [Workout] = []
     @Published var activeWorkout: Workout?
-    @Published var lastError: String?
-    
+
     private let supabaseStore = SupabaseStore.shared
     private var lastLoadTime: Date?
     private var didCleanupDuplicates = false
 
+    // Inject ToastManager for error handling
+    var toastManager: ToastManager?
+
     func uploadProgressPhoto(_ data: Data, for workoutId: UUID) async {
+        toastManager?.startLoading("Uploading progress photo...")
         do {
             let url = try await supabaseStore.uploadProgressPhoto(data, workoutId: workoutId)
+            var updatedWorkoutToSync: Workout?
+
             if let index = workouts.firstIndex(where: { $0.id == workoutId }) {
-                workouts[index].progressPhotoURL = url
+                var updated = workouts[index]
+                updated.progressPhotoURL = url
+                workouts[index] = updated
+                updatedWorkoutToSync = updated
             }
 
             if var active = activeWorkout, active.id == workoutId {
                 active.progressPhotoURL = url
                 activeWorkout = active
+                if updatedWorkoutToSync == nil {
+                    updatedWorkoutToSync = active
+                }
             }
 
-            await saveWorkouts()
+            try await saveImmediate()
+            if let workoutToSync = updatedWorkoutToSync {
+                try await supabaseStore.syncWorkouts([workoutToSync])
+            } else {
+                try await supabaseStore.syncWorkouts(workouts)
+            }
+            lastLoadTime = Date()
+            toastManager?.stopLoading()
+            toastManager?.showSuccess("Progress photo uploaded successfully")
         } catch {
-            lastError = "Failed to upload progress photo: \(error.localizedDescription)"
+            toastManager?.stopLoading()
+            toastManager?.showError(.storage(error.localizedDescription))
         }
     }
     
@@ -33,10 +53,9 @@ class WorkoutStore: ObservableObject {
         do {
             try await saveImmediate()
             try await supabaseStore.syncWorkouts(workouts)
-            lastError = nil
             lastLoadTime = Date()
         } catch {
-            lastError = "Failed to save workouts: \(error.localizedDescription)"
+            toastManager?.showError(.storage(error.localizedDescription))
         }
     }
     
@@ -63,7 +82,7 @@ class WorkoutStore: ObservableObject {
         lastLoadTime = Date()
         
         guard supabaseStore.authManager.isAuthenticated,
-              let currentUser = supabaseStore.authManager.currentUser else {
+              supabaseStore.authManager.currentUser != nil else {
             let task = Task<[Workout], Error> {
                 let fileURL = try Self.fileURL()
                 guard let data = try? Data(contentsOf: fileURL) else {
@@ -160,9 +179,8 @@ class WorkoutStore: ObservableObject {
     func reset() {
         workouts = []
         activeWorkout = nil
-        lastError = nil
         lastLoadTime = nil
-        
+
         Task {
             try? FileManager.default.removeItem(at: try Self.fileURL())
         }
@@ -209,14 +227,23 @@ class WorkoutStore: ObservableObject {
     func deleteWorkout(_ workout: Workout) {
         if let index = workouts.firstIndex(where: { $0.id == workout.id }) {
             workouts.remove(at: index)
-            
+
             Task { @MainActor in
-                await saveWorkouts()
-                
+                let displayName = workout.name.isEmpty ? "workout" : "\"\(workout.name)\""
+                toastManager?.startLoading("Deleting \(displayName)...")
+                do {
+                    try await saveImmediate()
+                } catch {
+                    // If local save fails, still attempt remote delete to keep state consistent
+                }
+
                 do {
                     try await supabaseStore.deleteWorkout(workout)
+                    toastManager?.stopLoading()
+                    toastManager?.showSuccess("Deleted \(displayName)")
                 } catch {
-                    lastError = "Failed to delete workout from Supabase: \(error.localizedDescription)"
+                    toastManager?.stopLoading()
+                    toastManager?.showError(.storage("Failed to delete workout: \(error.localizedDescription)"))
                 }
             }
         }

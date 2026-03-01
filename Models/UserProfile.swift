@@ -134,17 +134,22 @@ struct BodyWeightGoal: Codable {
 @MainActor
 class UserProfileStore: ObservableObject, Sendable {
     @Published var profile: UserProfile?
-    @Published var lastError: String?
     private var saveTask: Task<Void, Error>?
     private let supabaseStore = SupabaseStore.shared
+
+    // Inject ToastManager for error handling
+    var toastManager: ToastManager?
     
-    func saveProfile() async {        if let profile = profile {        }
+    func saveProfile() async {
         do {
-            try await save()            // Also sync to Supabase
-            if let profile = profile {                try await supabaseStore.syncProfile(profile)            } else {            }
-            lastError = nil
+            try await save()
+            // Also sync to Supabase
+            if let profile = profile {
+                try await supabaseStore.syncProfile(profile)
+            }
         } catch {
-            lastError = "Failed to save profile: \(error.localizedDescription)"        }
+            toastManager?.showError(.storage(error.localizedDescription))
+        }
     }
     
     private static func fileURL() throws -> URL {
@@ -156,43 +161,46 @@ class UserProfileStore: ObservableObject, Sendable {
         return url
     }
     
-    func load() async throws {        // Check if user is authenticated
+    func load() async throws {
+        // Check if user is authenticated
         guard supabaseStore.authManager.isAuthenticated,
-              let currentUser = supabaseStore.authManager.currentUser else {            // Fallback to local storage
+              supabaseStore.authManager.currentUser != nil else {
+            // Fallback to local storage
             let task = Task<UserProfile?, Error> {
                 let fileURL = try Self.fileURL()
-                guard let data = try? Data(contentsOf: fileURL) else {                    return nil
+                guard let data = try? Data(contentsOf: fileURL) else {
+                    return nil
                 }
                 let profile = try JSONDecoder().decode(UserProfile.self, from: data)
                 return profile
             }
             let profile = try await task.value
             self.profile = profile
-            
-            if let profile = profile {            } else {            }
             return
-        }        // First try to load from Supabase
+        }
+
+        // First try to load from Supabase
         do {
             if let supabaseProfile = try await supabaseStore.fetchProfile() {
                 self.profile = supabaseProfile
                 // Save to local storage as backup
                 try await save()
                 return
-            } else {            }
-        } catch {        }
+            }
+        } catch {
+        }
         
         // Fallback to local storage
         let task = Task<UserProfile?, Error> {
             let fileURL = try Self.fileURL()
-            guard let data = try? Data(contentsOf: fileURL) else {                return nil
-            }
-            let profile = try JSONDecoder().decode(UserProfile.self, from: data)
-            return profile
+        guard let data = try? Data(contentsOf: fileURL) else {
+            return nil
+        }
+        let profile = try JSONDecoder().decode(UserProfile.self, from: data)
+        return profile
         }
         let profile = try await task.value
         self.profile = profile
-        
-        if let profile = profile {        } else {        }
         
         // Sync local data to Supabase in background
         Task {
@@ -270,19 +278,23 @@ class UserProfileStore: ObservableObject, Sendable {
         }
 
         Task { @MainActor in
+            toastManager?.startLoading("Uploading profile image...")
             do {
                 let url = try await supabaseStore.uploadProfileImage(imageData)
-                profile?.profileImageURL = url
+                let cacheBustedURL = url + (url.contains("?") ? "&" : "?") + "t=\(Int(Date().timeIntervalSince1970))"
+                profile?.profileImageURL = cacheBustedURL
                 await saveProfile()
+                toastManager?.stopLoading()
+                toastManager?.showSuccess("Profile image updated successfully")
             } catch {
-                lastError = "Failed to upload profile image: \(error.localizedDescription)"
+                toastManager?.stopLoading()
+                toastManager?.showError(.storage("Failed to upload profile image: \(error.localizedDescription)"))
             }
         }
     }
     
     func reset() {
         profile = nil
-        lastError = nil
         saveTask?.cancel()
         saveTask = nil
         

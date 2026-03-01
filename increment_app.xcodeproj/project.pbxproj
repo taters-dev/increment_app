@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		71F000012F1A000100000001 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000042F1A000100000004 /* HeaderView.swift */; };
-		71F000022F1A000100000002 /* SharedStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000052F1A000100000005 /* SharedStyle.swift */; };
-		71F000032F1A000100000003 /* QuickActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000062F1A000100000006 /* QuickActions.swift */; };
 		71875A3D2DAE1A7D00B207E8 /* ProgressPhotoUploadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71875A372DAE1A7D00B207E8 /* ProgressPhotoUploadView.swift */; };
 		71875A3E2DAE1A7D00B207E8 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71875A332DAE1A7D00B207E8 /* ImagePicker.swift */; };
 		71875A3F2DAE1A7D00B207E8 /* NewWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71875A352DAE1A7D00B207E8 /* NewWorkoutView.swift */; };
@@ -29,6 +26,8 @@
 		71875A4E2DAE1A7D00B207E8 /* AddExerciseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71875A2F2DAE1A7D00B207E8 /* AddExerciseView.swift */; };
 		71875A4F2DAE1A7D00B207E8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 71875A252DAE1A7D00B207E8 /* Assets.xcassets */; };
 		71875A512DAE1A7D00B207E8 /* ExerciseHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71875A522DAE1A7D00B207E8 /* ExerciseHistoryView.swift */; };
+		71D859272F4845D5000132DF /* Debug.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 71D859262F4845D5000132DF /* Debug.xcconfig */; };
+		71D859292F4845F7000132DF /* Release.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 71D859282F4845F7000132DF /* Release.xcconfig */; };
 		71DE613F2E8639150019F324 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 71DE613E2E8639150019F324 /* Auth */; };
 		71DE61412E8639150019F324 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 71DE61402E8639150019F324 /* Realtime */; };
 		71DE61432E8639150019F324 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 71DE61422E8639150019F324 /* Supabase */; };
@@ -40,13 +39,19 @@
 		71DE61662E863F000019F324 /* SupabaseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DE61652E863F000019F324 /* SupabaseStore.swift */; };
 		71DE61682E863F000019F324 /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DE61672E863F000019F324 /* AuthenticationView.swift */; };
 		71DE616A2E863F000019F324 /* AppStateManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DE61692E863F000019F324 /* AppStateManager.swift */; };
+		71F000012F1A000100000001 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000042F1A000100000004 /* HeaderView.swift */; };
+		71F000022F1A000100000002 /* SharedStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000052F1A000100000005 /* SharedStyle.swift */; };
+		71F000032F1A000100000003 /* QuickActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000062F1A000100000006 /* QuickActions.swift */; };
+		71F000082F1A000100000008 /* ToastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000072F1A000100000007 /* ToastManager.swift */; };
+		71F0000A2F1A00010000000A /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000092F1A000100000009 /* AppError.swift */; };
+		71F0000C2F1A00010000000C /* ErrorBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F0000B2F1A00010000000B /* ErrorBanner.swift */; };
+		71F0000E2F1A00010000000E /* SuccessBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F0000D2F1A00010000000D /* SuccessBanner.swift */; };
+		71F000142F1A000100000014 /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F000132F1A000100000013 /* ImageUtils.swift */; };
+		71F000102F1A000100000010 /* LoadingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71F0000F2F1A00010000000F /* LoadingOverlay.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		716BB2B42D939211008B2C98 /* increment_app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = increment_app.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		71F000042F1A000100000004 /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
-		71F000052F1A000100000005 /* SharedStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStyle.swift; sourceTree = "<group>"; };
-		71F000062F1A000100000006 /* QuickActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActions.swift; sourceTree = "<group>"; };
 		71875A252DAE1A7D00B207E8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		71875A272DAE1A7D00B207E8 /* increment_app.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = increment_app.entitlements; sourceTree = "<group>"; };
 		71875A282DAE1A7D00B207E8 /* increment_appApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = increment_appApp.swift; sourceTree = "<group>"; };
@@ -59,6 +64,12 @@
 		71875A322DAE1A7D00B207E8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		71875A332DAE1A7D00B207E8 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		71875A342DAE1A7D00B207E8 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		71F000072F1A000100000007 /* ToastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastManager.swift; sourceTree = "<group>"; };
+		71F000092F1A000100000009 /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
+		71F0000B2F1A00010000000B /* ErrorBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorBanner.swift; sourceTree = "<group>"; };
+		71F0000D2F1A00010000000D /* SuccessBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessBanner.swift; sourceTree = "<group>"; };
+		71F0000F2F1A00010000000F /* LoadingOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingOverlay.swift; sourceTree = "<group>"; };
+		71F000132F1A000100000013 /* ImageUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUtils.swift; sourceTree = "<group>"; };
 		71875A352DAE1A7D00B207E8 /* NewWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewWorkoutView.swift; sourceTree = "<group>"; };
 		71875A362DAE1A7D00B207E8 /* ProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBar.swift; sourceTree = "<group>"; };
 		71875A372DAE1A7D00B207E8 /* ProgressPhotoUploadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressPhotoUploadView.swift; sourceTree = "<group>"; };
@@ -67,12 +78,18 @@
 		71875A3A2DAE1A7D00B207E8 /* WeightUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightUpdateView.swift; sourceTree = "<group>"; };
 		71875A3B2DAE1A7D00B207E8 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
 		71875A522DAE1A7D00B207E8 /* ExerciseHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseHistoryView.swift; sourceTree = "<group>"; };
+		71D859262F4845D5000132DF /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		71D859282F4845F7000132DF /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		71D8592A2F484668000132DF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		71DE61442E8639E90019F324 /* Config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Config.plist; sourceTree = "<group>"; };
 		71DE615F2E863F000019F324 /* AuthenticationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManager.swift; sourceTree = "<group>"; };
 		71DE61612E863F000019F324 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
 		71DE61652E863F000019F324 /* SupabaseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseStore.swift; sourceTree = "<group>"; };
 		71DE61672E863F000019F324 /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
 		71DE61692E863F000019F324 /* AppStateManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateManager.swift; sourceTree = "<group>"; };
+		71F000042F1A000100000004 /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
+		71F000052F1A000100000005 /* SharedStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStyle.swift; sourceTree = "<group>"; };
+		71F000062F1A000100000006 /* QuickActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +111,7 @@
 		716BB2AB2D939211008B2C98 = {
 			isa = PBXGroup;
 			children = (
+				71D8592A2F484668000132DF /* Info.plist */,
 				71DE61442E8639E90019F324 /* Config.plist */,
 				716BB2B52D939211008B2C98 /* Products */,
 				71875A252DAE1A7D00B207E8 /* Assets.xcassets */,
@@ -102,7 +120,10 @@
 				71875A2C2DAE1A7D00B207E8 /* Models */,
 				71875A2E2DAE1A7D00B207E8 /* Preview Content */,
 				71875A3C2DAE1A7D00B207E8 /* Views */,
+				71F000152F1A000100000015 /* Utils */,
 				71DE61462E863B0C0019F324 /* Frameworks */,
+				71D859262F4845D5000132DF /* Debug.xcconfig */,
+				71D859282F4845F7000132DF /* Release.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -117,6 +138,8 @@
 		71875A2C2DAE1A7D00B207E8 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				71F000092F1A000100000009 /* AppError.swift */,
+				71F000072F1A000100000007 /* ToastManager.swift */,
 				71875A292DAE1A7D00B207E8 /* UserProfile.swift */,
 				71875A2A2DAE1A7D00B207E8 /* Workout.swift */,
 				71875A2B2DAE1A7D00B207E8 /* WorkoutStore.swift */,
@@ -138,6 +161,7 @@
 		71875A3C2DAE1A7D00B207E8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				71F000112F1A000100000011 /* Components */,
 				71F000042F1A000100000004 /* HeaderView.swift */,
 				71F000052F1A000100000005 /* SharedStyle.swift */,
 				71F000062F1A000100000006 /* QuickActions.swift */,
@@ -158,6 +182,24 @@
 				71875A522DAE1A7D00B207E8 /* ExerciseHistoryView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		71F000112F1A000100000011 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				71F0000B2F1A00010000000B /* ErrorBanner.swift */,
+				71F0000D2F1A00010000000D /* SuccessBanner.swift */,
+				71F0000F2F1A00010000000F /* LoadingOverlay.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		71F000152F1A000100000015 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				71F000132F1A000100000013 /* ImageUtils.swift */,
+			);
+			path = Utils;
 			sourceTree = "<group>";
 		};
 		71DE61462E863B0C0019F324 /* Frameworks */ = {
@@ -229,8 +271,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				71D859292F4845F7000132DF /* Release.xcconfig in Resources */,
 				71875A4F2DAE1A7D00B207E8 /* Assets.xcassets in Resources */,
 				71DE61452E8639E90019F324 /* Config.plist in Resources */,
+				71D859272F4845D5000132DF /* Debug.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -244,6 +288,7 @@
 				71F000012F1A000100000001 /* HeaderView.swift in Sources */,
 				71F000022F1A000100000002 /* SharedStyle.swift in Sources */,
 				71F000032F1A000100000003 /* QuickActions.swift in Sources */,
+				71F000142F1A000100000014 /* ImageUtils.swift in Sources */,
 				71875A3D2DAE1A7D00B207E8 /* ProgressPhotoUploadView.swift in Sources */,
 				71875A3E2DAE1A7D00B207E8 /* ImagePicker.swift in Sources */,
 				71875A3F2DAE1A7D00B207E8 /* NewWorkoutView.swift in Sources */,
@@ -267,6 +312,11 @@
 				71DE61662E863F000019F324 /* SupabaseStore.swift in Sources */,
 				71DE61682E863F000019F324 /* AuthenticationView.swift in Sources */,
 				71DE616A2E863F000019F324 /* AppStateManager.swift in Sources */,
+				71F000082F1A000100000008 /* ToastManager.swift in Sources */,
+				71F0000A2F1A00010000000A /* AppError.swift in Sources */,
+				71F0000C2F1A00010000000C /* ErrorBanner.swift in Sources */,
+				71F0000E2F1A00010000000E /* SuccessBanner.swift in Sources */,
+				71F000102F1A000100000010 /* LoadingOverlay.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,6 +325,7 @@
 /* Begin XCBuildConfiguration section */
 		716BB2C02D939213008B2C98 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71D859262F4845D5000132DF /* Debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -339,6 +390,7 @@
 		};
 		716BB2C12D939213008B2C98 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71D859282F4845F7000132DF /* Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -396,6 +448,7 @@
 		};
 		716BB2C32D939213008B2C98 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71D859262F4845D5000132DF /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -407,6 +460,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Increment;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Requesting Camera Access for Progress Pictures";
+				INFOPLIST_KEY_SupabaseAnonKey = "$(SUPABASE_ANON_KEY)";
+				INFOPLIST_KEY_SupabaseURL = "$(SUPABASE_URL)";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -427,6 +482,7 @@
 		};
 		716BB2C42D939213008B2C98 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 71D859282F4845F7000132DF /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -438,6 +494,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Increment;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Requesting Camera Access for Progress Pictures";
+				INFOPLIST_KEY_SupabaseAnonKey = "$(SUPABASE_ANON_KEY)";
+				INFOPLIST_KEY_SupabaseURL = "$(SUPABASE_URL)";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

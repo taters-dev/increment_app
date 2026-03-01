@@ -338,8 +338,6 @@ struct NewWorkoutView: View {
             workoutStore.workouts.append(updatedWorkout)
             workoutStore.updateActiveWorkout(updatedWorkout)        }
         
-        for exercise in exercises {        }
-        
         Task {
             await workoutStore.saveWorkouts()
         }

@@ -82,7 +82,7 @@ struct SettingsView: View {
                     
                         .background(AppStyle.surface)
                         .navigationTitle("Settings")
-                        .onChange(of: selectedItem) { item in
+                        .onChange(of: selectedItem) { _, item in
                         Task {
                             if let data = try? await item?.loadTransferable(type: Data.self) {
                                 userProfileStore.updateProfileImage(data)
@@ -358,7 +358,7 @@ struct WorkoutSplitEditorView: View {
                         showingAddExercise = false
                     }
                 }
-                .onChange(of: showingAddExercise) { newValue in
+                .onChange(of: showingAddExercise) { _, newValue in
                     // showingAddExercise changed
                 }
             }

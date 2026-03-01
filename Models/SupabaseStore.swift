@@ -1,12 +1,13 @@
 import Foundation
 import Supabase
 
+@MainActor
 class SupabaseStore: ObservableObject {
     static let shared = SupabaseStore()
     let authManager = AuthenticationManager.shared
     private let supabase = SupabaseConfig.shared.client
     private let profileImagesBucket = "profile-images"
-    private let progressPhotosBucket = "progress-photos"
+    private let progressPhotosBucket = "progress-photo"
     
     private init() {}
     
@@ -33,7 +34,7 @@ class SupabaseStore: ObservableObject {
         }
         
         let response = try await supabase.from("workouts")
-            .select("id,user_id,date,name,exercises,notes,duration,body_weight,progress_photo_url,created_at,updated_at")
+            .select("id,user_id,date,name,exercises,notes,duration,body_weight,progress_photo_url")
             .eq("user_id", value: userId.uuidString)
             .order("date", ascending: false)
             .execute()
@@ -53,7 +54,7 @@ class SupabaseStore: ObservableObject {
             throw SupabaseError.notAuthenticated
         }
         
-        let response = try await supabase.from("workouts")
+        try await supabase.from("workouts")
             .delete()
             .eq("id", value: workout.id.uuidString)
             .eq("user_id", value: userId.uuidString)
@@ -90,7 +91,7 @@ class SupabaseStore: ObservableObject {
             workoutGroups[key]?.append(workoutData)
         }
         
-        for (key, workouts) in workoutGroups {
+        for (_, workouts) in workoutGroups {
             if workouts.count > 1 {
                 let workoutsToDelete = Array(workouts.dropFirst())
                 
@@ -204,8 +205,6 @@ struct SupabaseWorkout: Codable {
     let duration: Int?
     let body_weight: Double?
     let progress_photo_url: String?
-    let created_at: String
-    let updated_at: String
     
     init(from workout: Workout, userId: String) {
         self.id = workout.id.uuidString
@@ -217,8 +216,6 @@ struct SupabaseWorkout: Codable {
         self.duration = workout.duration.map { Int($0) }
         self.body_weight = workout.bodyWeight
         self.progress_photo_url = workout.progressPhotoURL
-        self.created_at = ISO8601DateFormatter().string(from: Date())
-        self.updated_at = ISO8601DateFormatter().string(from: Date())
     }
 }
 

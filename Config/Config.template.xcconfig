@@ -1,0 +1,7 @@
+// Configuration Template
+// Copy this file to Debug.xcconfig and Release.xcconfig
+// Replace the placeholder values with your actual Supabase credentials
+// IMPORTANT: Debug.xcconfig and Release.xcconfig are gitignored - never commit them!
+
+SUPABASE_URL = https:/$()/your-project-id.supabase.co
+SUPABASE_ANON_KEY = your-supabase-anon-key-here

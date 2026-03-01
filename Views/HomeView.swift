@@ -8,7 +8,6 @@ struct HomeView: View {
     @State private var selectedWorkout: Workout?
     @State private var showingWorkoutDetail = false
     @State private var selectedWorkoutDay: UserProfile.WorkoutDay?
-    @State private var showingWorkoutPicker = false
     @State private var showingSettings = false
     @State private var showingExerciseEditor = false
     @State private var showingExerciseHistory = false
@@ -35,66 +34,55 @@ struct HomeView: View {
                 HeaderView(title: "Home", subtitle: Date().formatted(date: .abbreviated, time: .omitted))
                 
                 // Scrollable content
-                ScrollView {
-                    VStack(spacing: AppStyle.sectionSpacing) {
-                        // Today's Workout Modal
-                        if let profile = userProfileStore.profile {
-                            if let workout = todayWorkout {
-                                TodayWorkoutCard(
-                                    workout: workout,
-                                    workoutSplit: profile.workoutSplit,
-                                    selectedWorkout: $selectedWorkoutDay,
-                                    showingWorkoutPicker: $showingWorkoutPicker,
-                                    showingSettings: $showingSettings,
-                                    showingExerciseEditor: $showingExerciseEditor,
-                                    showingExerciseHistory: $showingExerciseHistory,
-                                    selectedExerciseForHistory: $selectedExerciseForHistory,
-                                    onStartTap: { 
-                                        // Capture the selected workout when starting
-                                        if let activeWorkout = workoutStore.activeWorkout {
-                                            // Starting workout with active workout
-                                        } else {
-                                            // Starting workout with no active workout
+                GeometryReader { geo in
+                    ScrollView {
+                    VStack(spacing: 0) {
+                            // Today's Workout Modal
+                            if let profile = userProfileStore.profile {
+                                if let workout = todayWorkout {
+                                    TodayWorkoutCard(
+                                        workout: workout,
+                                        workoutSplit: profile.workoutSplit,
+                                        availableHeight: geo.size.height,
+                                        selectedWorkout: $selectedWorkoutDay,
+                                        showingSettings: $showingSettings,
+                                        showingExerciseEditor: $showingExerciseEditor,
+                                        showingExerciseHistory: $showingExerciseHistory,
+                                        selectedExerciseForHistory: $selectedExerciseForHistory,
+                                        onStartTap: {
+                                            showingNewWorkout = true
                                         }
-                                        showingNewWorkout = true 
-                                    },
-                                    onWorkoutPickerTap: { showingWorkoutPicker.toggle() }
-                                )
-                                .environmentObject(userProfileStore)
-                                .padding(.horizontal, AppStyle.cardPadding)
-                            } else if !profile.workoutSplit.isEmpty {
-                                TodayWorkoutCard(
-                                    workout: profile.workoutSplit[0],
-                                    workoutSplit: profile.workoutSplit,
-                                    selectedWorkout: $selectedWorkoutDay,
-                                    showingWorkoutPicker: $showingWorkoutPicker,
-                                    showingSettings: $showingSettings,
-                                    showingExerciseEditor: $showingExerciseEditor,
-                                    showingExerciseHistory: $showingExerciseHistory,
-                                    selectedExerciseForHistory: $selectedExerciseForHistory,
-                                    onStartTap: { 
-                                        // Capture the selected workout when starting
-                                        if let activeWorkout = workoutStore.activeWorkout {
-                                            // Starting workout with active workout
-                                        } else {
-                                            // Starting workout with no active workout
+                                    )
+                                    .environmentObject(userProfileStore)
+                                    .padding(.horizontal, AppStyle.cardPadding)
+                                } else if !profile.workoutSplit.isEmpty {
+                                    TodayWorkoutCard(
+                                        workout: profile.workoutSplit[0],
+                                        workoutSplit: profile.workoutSplit,
+                                        availableHeight: geo.size.height,
+                                        selectedWorkout: $selectedWorkoutDay,
+                                        showingSettings: $showingSettings,
+                                        showingExerciseEditor: $showingExerciseEditor,
+                                        showingExerciseHistory: $showingExerciseHistory,
+                                        selectedExerciseForHistory: $selectedExerciseForHistory,
+                                        onStartTap: {
+                                            showingNewWorkout = true
                                         }
-                                        showingNewWorkout = true 
-                                    },
-                                    onWorkoutPickerTap: { showingWorkoutPicker.toggle() }
-                                )
-                                .environmentObject(userProfileStore)
-                                .padding(.horizontal, AppStyle.cardPadding)
+                                    )
+                                    .environmentObject(userProfileStore)
+                                    .padding(.horizontal, AppStyle.cardPadding)
+                                } else {
+                                    NoWorkoutScheduledCard()
+                                        .padding(.horizontal, AppStyle.cardPadding)
+                                }
                             } else {
                                 NoWorkoutScheduledCard()
                                     .padding(.horizontal, AppStyle.cardPadding)
                             }
-                        } else {
-                            NoWorkoutScheduledCard()
-                                .padding(.horizontal, AppStyle.cardPadding)
                         }
+                        .frame(minHeight: geo.size.height, alignment: .top)
+                        .padding(.top, -22)
                     }
-                    .padding(.top, 10)
                 }
             }
         }
@@ -124,14 +112,12 @@ struct HomeView: View {
                 )
             }
         }
-        .onChange(of: showingNewWorkout) { isShowing in
+        .onChange(of: showingNewWorkout) { _, isShowing in
             if isShowing {
-                let selectedDay = selectedWorkoutDay ?? todayWorkout
-                let activeWorkout = workoutStore.activeWorkout
                 // Opening NewWorkoutView
             }
         }
-        .onChange(of: selectedWorkoutDay) { newSelectedDay in
+        .onChange(of: selectedWorkoutDay) { _, newSelectedDay in
             // Save state when workout day selection changes
             appStateManager.saveCurrentState(
                 workoutStore: workoutStore,
@@ -180,9 +166,8 @@ struct TodayWorkoutCard: View {
     let workout: UserProfile.WorkoutDay
     let onStartTap: () -> Void
     let workoutSplit: [UserProfile.WorkoutDay]
-    let onWorkoutPickerTap: () -> Void
+    let availableHeight: CGFloat
     @Binding var selectedWorkout: UserProfile.WorkoutDay?
-    @Binding var showingWorkoutPicker: Bool
     @Binding var showingSettings: Bool
     @Binding var showingExerciseEditor: Bool
     @Binding var showingExerciseHistory: Bool
@@ -196,21 +181,19 @@ struct TodayWorkoutCard: View {
     init(
         workout: UserProfile.WorkoutDay,
         workoutSplit: [UserProfile.WorkoutDay],
+        availableHeight: CGFloat,
         selectedWorkout: Binding<UserProfile.WorkoutDay?>,
-        showingWorkoutPicker: Binding<Bool>,
         showingSettings: Binding<Bool>,
         showingExerciseEditor: Binding<Bool>,
         showingExerciseHistory: Binding<Bool>,
         selectedExerciseForHistory: Binding<String>,
-        onStartTap: @escaping () -> Void,
-        onWorkoutPickerTap: @escaping () -> Void
+        onStartTap: @escaping () -> Void
     ) {
         self.workout = workout
         self.workoutSplit = workoutSplit
+        self.availableHeight = availableHeight
         self.onStartTap = onStartTap
-        self.onWorkoutPickerTap = onWorkoutPickerTap
         _selectedWorkout = selectedWorkout
-        _showingWorkoutPicker = showingWorkoutPicker
         _showingSettings = showingSettings
         _showingExerciseEditor = showingExerciseEditor
         _showingExerciseHistory = showingExerciseHistory
@@ -220,24 +203,21 @@ struct TodayWorkoutCard: View {
     var displayedWorkout: UserProfile.WorkoutDay {
         return selectedWorkout ?? workout
     }
+
+    private var listHeight: CGFloat {
+        max(availableHeight - 150, 240)
+    }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Header with workout name, logo, and edit button
+        VStack(alignment: .leading, spacing: 6) {
+            // Header (logo only)
             HStack {
-                Text("Today's Workout: \(displayedWorkout.name)")
-                    .font(.headline)
-                    .foregroundColor(.secondary)
-                
                 Spacer()
                 
-                VStack(alignment: .trailing, spacing: 6) {
-                    
-                    Image("increment_logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 50)
-                }
+                Image("increment_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 50)
             }
             
             // Exercises section - now with inline editing
@@ -248,13 +228,42 @@ struct TodayWorkoutCard: View {
                     // Spreadsheet-like exercise list
                     VStack(spacing: 0) {
                         // Header row
-                        HStack {
-                            Text("Exercise")
+                        HStack(spacing: 12) {
+                            Text(displayedWorkout.name)
                                 .font(.headline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(.primary)
+                                .lineLimit(1)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            
+
+                            if workoutSplit.count > 1 {
+                                Menu {
+                                    ForEach(workoutSplit) { workoutDay in
+                                        Button(action: {
+                                            selectedWorkout = workoutDay
+                                        }) {
+                                            if displayedWorkout.id == workoutDay.id {
+                                                Label(workoutDay.name, systemImage: "checkmark")
+                                            } else {
+                                                Text(workoutDay.name)
+                                            }
+                                        }
+                                    }
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "arrow.triangle.2.circlepath")
+                                        Text("Switch")
+                                    }
+                                    .font(.subheadline)
+                                    .foregroundColor(Color("AccentColor"))
+                                    .padding(.vertical, 6)
+                                    .padding(.horizontal, 10)
+                                    .background(Color("AccentColor").opacity(0.1))
+                                    .cornerRadius(10)
+                                }
+                                .buttonStyle(.plain)
+                            }
+
                             Button(action: addExercise) {
                                 Image(systemName: "plus.circle.fill")
                                     .foregroundColor(Color("AccentColor"))
@@ -284,7 +293,7 @@ struct TodayWorkoutCard: View {
                             .onDelete(perform: removeExercise)
                         }
                         .listStyle(PlainListStyle())
-                        .frame(height: max(CGFloat(editedExercises.count * 70), 240)) // Increase height to show more rows
+                        .frame(height: listHeight)
                         
                         
                         // Fallback if no exercises are loaded
@@ -315,10 +324,7 @@ struct TodayWorkoutCard: View {
                     }
                     .background(Color.white)
                     .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
-                    )
+                    .padding(1)
                 } else {
                     // No exercises placeholder
                     VStack(spacing: 16) {
@@ -349,61 +355,8 @@ struct TodayWorkoutCard: View {
                     .cornerRadius(12)
                 }
             }
-            
-            // Workout Picker (within the modal)
-            if showingWorkoutPicker, workoutSplit.count > 1 {
-                VStack(spacing: 12) {
-                    ForEach(workoutSplit) { workoutDay in
-                        Button(action: {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                selectedWorkout = workoutDay
-                                showingWorkoutPicker = false
-                            }
-                        }) {
-                            HStack {
-                                Text(workoutDay.name)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                if selectedWorkout?.id == workoutDay.id {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundColor(Color("AccentColor"))
-                                }
-                            }
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(12)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                }
-                .transition(.move(edge: .top).combined(with: .opacity))
-                .animation(.easeInOut(duration: 0.3), value: showingWorkoutPicker)
-            }
-            
-            // Action buttons
-            VStack(spacing: 12) {
-                if workoutSplit.count > 1 {
-                    Button(action: onWorkoutPickerTap) {
-                        HStack {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                            Text("Switch Workout")
-                        }
-                        .font(.headline)
-                        .foregroundColor(Color("AccentColor"))
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 24)
-                        .frame(maxWidth: .infinity)
-                        .background(Color("AccentColor").opacity(0.1))
-                        .cornerRadius(12)
-                    }
-                }
-            }
         }
-        .padding(AppStyle.cardPadding)
-        .background(AppStyle.cardBackground)
-        .cornerRadius(AppStyle.cardCornerRadius)
-        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
+        .frame(maxHeight: .infinity, alignment: .top)
         .onAppear {
             // Check if there's an active workout for today and use that data
             let today = Calendar.current.startOfDay(for: Date())
@@ -430,7 +383,7 @@ struct TodayWorkoutCard: View {
                 // Loaded workout split exercises
             }
         }
-        .onChange(of: selectedWorkout) { newWorkout in
+        .onChange(of: selectedWorkout) { _, newWorkout in
             // Check if there's an active workout for today and use that data
             let today = Calendar.current.startOfDay(for: Date())
             if let activeWorkout = workoutStore.activeWorkout,

@@ -15,14 +15,27 @@ class SupabaseConfig {
     }()
     
     private init() {
-        guard let path = Bundle.main.path(forResource: "Config", ofType: "plist"),
-              let plist = NSDictionary(contentsOfFile: path),
-              let urlString = plist["SUPABASE_URL"] as? String,
-              let url = URL(string: urlString),
-              let key = plist["SUPABASE_ANON_KEY"] as? String else {
-            fatalError("Failed to load Supabase configuration from Config.plist")
+        // Prefer Info.plist (values injected from .xcconfig), fallback to bundled Config.plist.
+        if let infoPlist = Bundle.main.infoDictionary,
+           let urlString = infoPlist["SupabaseURL"] as? String,
+           let url = URL(string: urlString),
+           let key = infoPlist["SupabaseAnonKey"] as? String {
+            self.supabaseURL = url
+            self.supabaseAnonKey = key
+            return
         }
-        self.supabaseURL = url
-        self.supabaseAnonKey = key
+
+        if let configURL = Bundle.main.url(forResource: "Config", withExtension: "plist"),
+           let data = try? Data(contentsOf: configURL),
+           let config = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any],
+           let urlString = config["SUPABASE_URL"] as? String,
+           let url = URL(string: urlString),
+           let key = config["SUPABASE_ANON_KEY"] as? String {
+            self.supabaseURL = url
+            self.supabaseAnonKey = key
+            return
+        }
+
+        fatalError("Failed to load Supabase configuration. Ensure Info.plist or Config.plist includes SupabaseURL/SupabaseAnonKey or SUPABASE_URL/SUPABASE_ANON_KEY.")
     }
 }

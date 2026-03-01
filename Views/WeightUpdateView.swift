@@ -113,8 +113,11 @@ struct WeightUpdateView: View {
         if let existingIndex = workoutStore.workouts.firstIndex(where: { workout in
             Calendar.current.isDate(workout.date, inSameDayAs: today) && workout.name == "Weight Update"
         }) {
-            // Update existing workout
-            workoutStore.workouts[existingIndex].bodyWeight = weight        } else {
+            // Update existing workout (replace element to trigger @Published)
+            var updatedWorkout = workoutStore.workouts[existingIndex]
+            updatedWorkout.bodyWeight = weight
+            workoutStore.workouts[existingIndex] = updatedWorkout
+        } else {
             // Create new workout
             let workout = Workout(
                 date: Date(),
@@ -122,7 +125,8 @@ struct WeightUpdateView: View {
                 exercises: [],
                 bodyWeight: weight
             )
-            workoutStore.workouts.append(workout)        }
+            workoutStore.workouts.append(workout)
+        }
         
         Task {
             await workoutStore.saveWorkouts()
