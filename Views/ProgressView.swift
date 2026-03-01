@@ -5,7 +5,9 @@ struct ProgressDashboardView: View {
     @EnvironmentObject var userProfileStore: UserProfileStore
     @State private var showingEditBodyWeight = false
     @State private var showingEditExerciseGoal: ExerciseGoal? = nil
-    @State private var showingGoalUpdate = false
+    @State private var showingExerciseGoal = false
+    @State private var showingWeightGoal = false
+    @State private var showingWorkoutsGoal = false
 
     private func exerciseData(for exerciseName: String) -> [(Date, Double)] {
         return workoutStore.workouts
@@ -28,41 +30,74 @@ struct ProgressDashboardView: View {
             }
             .sorted { $0.0 < $1.0 }
     }
+
+    private var weeklyWorkoutCount: Int {
+        let calendar = Calendar.current
+        let now = Date()
+        return workoutStore.workouts.filter { workout in
+            calendar.isDate(workout.date, equalTo: now, toGranularity: .weekOfYear) &&
+            workout.name != "Progress Photo" &&
+            workout.name != "Weight Update"
+        }.count
+    }
+
+    private var monthlyWorkoutCount: Int {
+        let calendar = Calendar.current
+        let now = Date()
+        return workoutStore.workouts.filter { workout in
+            calendar.isDate(workout.date, equalTo: now, toGranularity: .month) &&
+            workout.name != "Progress Photo" &&
+            workout.name != "Weight Update"
+        }.count
+    }
     
     var body: some View {
         ZStack {
-            AppStyle.canvas.ignoresSafeArea()
+            Color.white.ignoresSafeArea()
             VStack(spacing: 0) {
                 HeaderView(title: "Progress", subtitle: nil, showTitle: false)
                 
                 ScrollView {
                     VStack(spacing: AppStyle.sectionSpacing) {
-                        Button(action: { showingGoalUpdate = true }) {
-                            HStack {
-                                Image(systemName: "target")
-                                    .font(.title2)
-                                Text("Update Goals")
-                                    .font(.headline)
-                            }
-                            .foregroundColor(AppStyle.brandBlue)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
+                        HStack(spacing: 12) {
+                            GoalActionButton(
+                                title: "Exercise Goal",
+                                systemImage: "dumbbell.fill",
+                                action: { showingExerciseGoal = true }
+                            )
+
+                            GoalActionButton(
+                                title: "Weight Goal",
+                                systemImage: "scalemass.fill",
+                                action: { showingWeightGoal = true }
+                            )
+
+                            GoalActionButton(
+                                title: "Workouts Goal",
+                                systemImage: "calendar.badge.checkmark",
+                                action: { showingWorkoutsGoal = true }
+                            )
                         }
-                        .padding(.horizontal, AppStyle.cardPadding)
-                        .background(AppStyle.cardBackground)
-                        .cornerRadius(AppStyle.cardCornerRadius)
-                        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
                         .padding(.horizontal, AppStyle.cardPadding)
                         
                         if let profile = userProfileStore.profile {
                             VStack(spacing: AppStyle.sectionSpacing) {
+                                if let workoutsGoal = profile.workoutsGoal {
+                                    WorkoutsGoalCard(
+                                        weeklyCount: weeklyWorkoutCount,
+                                        weeklyTarget: workoutsGoal.weeklyTarget,
+                                        monthlyCount: monthlyWorkoutCount,
+                                        monthlyTarget: workoutsGoal.monthlyTarget
+                                    )
+                                }
                                 if let bodyWeightGoal = profile.bodyWeightGoal {
                                     GoalCard(
                                         title: "Body Weight Goal",
                                         current: bodyWeightGoal.currentWeight,
                                         target: bodyWeightGoal.targetWeight,
                                         percentage: bodyWeightGoal.progressPercentage,
-                                        data: bodyWeightData
+                                        data: bodyWeightData,
+                                        targetDate: bodyWeightGoal.targetDate
                                     )
                                     .onTapGesture {
                                         showingEditBodyWeight = true
@@ -74,7 +109,8 @@ struct ProgressDashboardView: View {
                                         title: goal.exerciseName,
                                         current: goal.currentWeight,
                                         target: goal.targetWeight,
-                                        percentage: calculateProgress(current: goal.currentWeight, target: goal.targetWeight)
+                                        percentage: calculateProgress(current: goal.currentWeight, target: goal.targetWeight),
+                                        targetDate: goal.targetDate
                                     )
                                     .onTapGesture {
                                         showingEditExerciseGoal = goal
@@ -105,6 +141,23 @@ struct ProgressDashboardView: View {
                 )
             }
         }
+        .sheet(isPresented: $showingExerciseGoal) {
+            AddExerciseGoalView(isPresented: $showingExerciseGoal)
+                .environmentObject(userProfileStore)
+                .environmentObject(workoutStore)
+        }
+        .sheet(isPresented: $showingWeightGoal) {
+            EditBodyWeightGoalView(
+                isPresented: $showingWeightGoal,
+                initialGoal: userProfileStore.profile?.bodyWeightGoal
+            )
+            .environmentObject(userProfileStore)
+            .environmentObject(workoutStore)
+        }
+        .sheet(isPresented: $showingWorkoutsGoal) {
+            WorkoutsGoalEditorView(isPresented: $showingWorkoutsGoal)
+                .environmentObject(userProfileStore)
+        }
         .sheet(item: $showingEditExerciseGoal) { goal in
             EditExerciseGoalView(
                 isPresented: Binding(
@@ -113,12 +166,6 @@ struct ProgressDashboardView: View {
                 ),
                 initialGoal: goal
             )
-        }
-        .sheet(isPresented: $showingGoalUpdate) {
-            GoalUpdateView(
-                onDismiss: { showingGoalUpdate = false }
-            )
-            .environmentObject(userProfileStore)
         }
     }
     
@@ -163,11 +210,238 @@ struct ProgressDashboardView: View {
     }
 }
 
+struct GoalActionButton: View {
+    let title: String
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: systemImage)
+                    .font(.title2)
+                Text(title)
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+            }
+            .foregroundColor(AppStyle.brandBlue)
+            .frame(maxWidth: .infinity, minHeight: 72)
+            .padding(.vertical, 10)
+            .background(AppStyle.cardBackground)
+            .cornerRadius(AppStyle.cardCornerRadius)
+            .shadow(color: AppStyle.cardShadow, radius: 8, x: 0, y: 4)
+        }
+    }
+}
+
+struct WorkoutsGoalEditorView: View {
+    @Binding var isPresented: Bool
+    @EnvironmentObject var userProfileStore: UserProfileStore
+    @State private var weeklyTarget = ""
+    @State private var monthlyTarget = ""
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Workouts Goal")
+                .font(.headline)
+                .padding(.top)
+
+            VStack(spacing: 12) {
+                VStack(alignment: .leading) {
+                    Text("Weekly Goal")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    HStack {
+                        TextField("Workouts per week", text: $weeklyTarget)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.center)
+                            .font(.system(size: 24, weight: .medium))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(10)
+                }
+
+                VStack(alignment: .leading) {
+                    Text("Monthly Goal")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    HStack {
+                        TextField("Workouts per month", text: $monthlyTarget)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.center)
+                            .font(.system(size: 24, weight: .medium))
+                            .frame(maxWidth: .infinity)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(10)
+                }
+            }
+            .padding(.horizontal)
+
+            HStack {
+                Button("Cancel") {
+                    isPresented = false
+                }
+                .foregroundColor(.secondary)
+
+                Spacer()
+
+                Button("Save") {
+                    save()
+                    isPresented = false
+                }
+                .disabled(!isValid)
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 8)
+        }
+        .frame(width: UIScreen.main.bounds.width * 0.85)
+        .padding(.bottom, 16)
+        .background(Color.white)
+        .cornerRadius(15)
+        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
+        .onAppear {
+            if let goal = userProfileStore.profile?.workoutsGoal {
+                weeklyTarget = String(goal.weeklyTarget)
+                monthlyTarget = String(goal.monthlyTarget)
+            }
+        }
+    }
+
+    private var isValid: Bool {
+        Int(weeklyTarget) != nil && Int(monthlyTarget) != nil
+    }
+
+    private func save() {
+        guard let weekly = Int(weeklyTarget),
+              let monthly = Int(monthlyTarget),
+              weekly > 0,
+              monthly > 0 else { return }
+
+        if var profile = userProfileStore.profile {
+            profile.workoutsGoal = WorkoutsGoal(weeklyTarget: weekly, monthlyTarget: monthly)
+            userProfileStore.profile = profile
+            Task { @MainActor in
+                await userProfileStore.saveProfile()
+            }
+        }
+    }
+}
+
+struct WorkoutsGoalCard: View {
+    let weeklyCount: Int
+    let weeklyTarget: Int
+    let monthlyCount: Int
+    let monthlyTarget: Int
+
+    var body: some View {
+        HStack(spacing: 14) {
+            WorkoutGoalGaugeCard(
+                completed: weeklyCount,
+                target: weeklyTarget,
+                periodLabel: "Week"
+            )
+
+            WorkoutGoalGaugeCard(
+                completed: monthlyCount,
+                target: monthlyTarget,
+                periodLabel: "Month"
+            )
+        }
+    }
+}
+
+struct WorkoutGoalGaugeCard: View {
+    let completed: Int
+    let target: Int
+    let periodLabel: String
+
+    private var progress: Double {
+        guard target > 0 else { return 0 }
+        return min(Double(completed) / Double(target), 1.0)
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                HalfCircleProgressShape()
+                    .stroke(
+                        AppStyle.brandBlue.opacity(0.14),
+                        style: StrokeStyle(lineWidth: 14, lineCap: .round)
+                    )
+
+                HalfCircleProgressShape(progress: progress)
+                    .stroke(
+                        AppStyle.brandBlue,
+                        style: StrokeStyle(lineWidth: 14, lineCap: .round)
+                    )
+
+                VStack(spacing: 2) {
+                    Text("\(completed) / \(target)")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(AppStyle.brandBlue)
+                    Text("completed")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .offset(y: 8)
+            }
+            .frame(height: 86)
+
+            Text(periodLabel)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(AppStyle.brandBlue)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 10)
+        .padding(.top, 16)
+        .padding(.bottom, 14)
+        .background(AppStyle.cardBackground)
+        .cornerRadius(AppStyle.cardCornerRadius)
+        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
+    }
+}
+
+struct HalfCircleProgressShape: Shape {
+    var progress: Double = 1.0
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let radius = min(rect.width / 2, rect.height)
+        let center = CGPoint(x: rect.midX, y: rect.maxY)
+        let clampedProgress = min(max(progress, 0), 1)
+        let endAngle = Angle.degrees(180 + (180 * clampedProgress))
+
+        var path = Path()
+        path.addArc(
+            center: center,
+            radius: radius - 8,
+            startAngle: .degrees(180),
+            endAngle: endAngle,
+            clockwise: false
+        )
+        return path
+    }
+}
+
 struct ExerciseGoalCard: View {
     let title: String
     let current: Double
     let target: Double
     let percentage: Double
+    let targetDate: Date?
+
+    private var formattedTargetDate: String? {
+        guard let targetDate else { return nil }
+        return targetDate.formatted(date: .abbreviated, time: .omitted)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -177,6 +451,12 @@ struct ExerciseGoalCard: View {
             Text("\(String(format: "%.1f", current))lbs / \(String(format: "%.1f", target))lbs")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+
+            if let formattedTargetDate {
+                Text("Target date: \(formattedTargetDate)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
             
             // Progress Bar
             GeometryReader { geometry in
@@ -207,6 +487,12 @@ struct GoalCard: View {
     let target: Double
     let percentage: Double
     let data: [(Date, Double)] // Keep for compatibility but don't use
+    let targetDate: Date?
+
+    private var formattedTargetDate: String? {
+        guard let targetDate else { return nil }
+        return targetDate.formatted(date: .abbreviated, time: .omitted)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -216,6 +502,12 @@ struct GoalCard: View {
             Text("\(String(format: "%.1f", current))lbs / \(String(format: "%.1f", target))lbs")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+
+            if let formattedTargetDate {
+                Text("Target date: \(formattedTargetDate)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
             
             // Progress Bar
             GeometryReader { geometry in

@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var selectedItem: PhotosPickerItem?
     @State private var showingWorkoutSplitEditor = false
     @State private var showingProfileEditor = false
+    @State private var showingWorkoutsGoalEditor = false
     
     var body: some View {
         ZStack {
@@ -67,6 +68,11 @@ struct SettingsView: View {
                             Label("Workout Split", systemImage: "calendar")
                         }
                         .foregroundColor(.primary)
+
+                        Button(action: { showingWorkoutsGoalEditor = true }) {
+                            Label("Workouts Goal", systemImage: "calendar.badge.checkmark")
+                        }
+                        .foregroundColor(.primary)
                     }
                     
                     Section(header: Text("Account")) {
@@ -95,6 +101,10 @@ struct SettingsView: View {
                     }
                     .sheet(isPresented: $showingWorkoutSplitEditor) {
                         WorkoutSplitEditorView()
+                            .environmentObject(userProfileStore)
+                    }
+                    .sheet(isPresented: $showingWorkoutsGoalEditor) {
+                        WorkoutsGoalEditorView(isPresented: $showingWorkoutsGoalEditor)
                             .environmentObject(userProfileStore)
                     }
                     }

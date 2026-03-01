@@ -74,76 +74,105 @@ struct AddExerciseGoalView: View {
     @State private var exerciseName = ""
     @State private var currentWeight = ""
     @State private var targetWeight = ""
+    @State private var targetDate = Date()
+    @State private var exerciseSelectionMode: ExerciseSelectionMode = .existing
+
+    private enum ExerciseSelectionMode {
+        case existing
+        case new
+    }
     
     private var exercises: [String] {
         // Get exercises from completed workouts
-        let workoutExercises = Set(workoutStore.workouts.flatMap { workout in
-            workout.exercises.map { $0.name }
-        })
-        
-        // Get exercises from workout split templates
-        let templateExercises = Set(userProfileStore.profile?.workoutSplit.flatMap { workoutDay in
+        Set(userProfileStore.profile?.workoutSplit.flatMap { workoutDay in
             workoutDay.exercises.map { $0.name }
         } ?? [])
-        
-        // Combine and sort
-        return (workoutExercises.union(templateExercises)).sorted()
+        .sorted()
     }
     
     var body: some View {
         VStack(spacing: 16) {
+            Text("Exercise Goal")
+                .font(.headline)
+                .foregroundColor(AppStyle.brandBlue)
+                .padding(.top)
+
             VStack(spacing: 12) {
-                // Exercise Name
                 VStack(alignment: .leading) {
                     Text("Exercise")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+
+                    HStack(spacing: 10) {
+                        Button(action: {
+                            exerciseSelectionMode = .existing
+                            if exerciseName.isEmpty, let firstExercise = exercises.first {
+                                exerciseName = firstExercise
+                                if let lastWeight = findLastWeight(for: firstExercise) {
+                                    currentWeight = String(format: "%.1f", lastWeight)
+                                }
+                            }
+                        }) {
+                            Text("Select Exercise")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(exerciseSelectionMode == .existing ? AppStyle.brandBlue : AppStyle.cardBackground)
+                                .foregroundColor(exerciseSelectionMode == .existing ? .white : AppStyle.brandBlue)
+                                .cornerRadius(10)
+                        }
+
+                        Button(action: {
+                            exerciseSelectionMode = .new
+                            exerciseName = ""
+                        }) {
+                            Text("Add New Exercise")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(exerciseSelectionMode == .new ? AppStyle.brandBlue : AppStyle.cardBackground)
+                                .foregroundColor(exerciseSelectionMode == .new ? .white : AppStyle.brandBlue)
+                                .cornerRadius(10)
+                        }
+                    }
                     
-                    VStack {
-                        // Scrollable exercise picker
-                        ScrollView {
-                            LazyVStack(spacing: 8) {
+                    if exerciseSelectionMode == .existing {
+                        if exercises.isEmpty {
+                            Text("No exercises found in your split.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.top, 4)
+                        } else {
+                            Menu {
                                 ForEach(exercises, id: \.self) { exercise in
-                                    Button(action: {
+                                    Button(exercise) {
                                         exerciseName = exercise
                                         if let lastWeight = findLastWeight(for: exercise) {
                                             currentWeight = String(format: "%.1f", lastWeight)
                                         }
-                                    }) {
-                                        HStack {
-                                            Text(exercise)
-                                                .foregroundColor(.primary)
-                                            Spacer()
-                                            if exerciseName == exercise {
-                                                Image(systemName: "checkmark")
-                                                    .foregroundColor(.accentColor)
-                                            }
-                                        }
-                                        .padding()
-                                        .background(exerciseName == exercise ? Color.accentColor.opacity(0.1) : Color(.systemGray6))
-                                        .cornerRadius(10)
                                     }
                                 }
-                            }
-                            .padding(.horizontal, 4)
-                        }
-                        .frame(maxHeight: 200)
-                        
-                        // Custom exercise input
-                        HStack {
-                            TextField("Or enter custom exercise", text: $exerciseName)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                            if !exerciseName.isEmpty && !exercises.contains(exerciseName) {
-                                Button("Add") {
-                                    // Custom exercise will be automatically included in the list
+                            } label: {
+                                HStack {
+                                    Text(exerciseName.isEmpty ? "Choose from workout split" : exerciseName)
+                                        .foregroundColor(exerciseName.isEmpty ? .secondary : .primary)
+                                    Spacer()
+                                    Image(systemName: "chevron.down")
+                                        .foregroundColor(AppStyle.brandBlue)
                                 }
-                                .foregroundColor(.accentColor)
+                                .padding()
+                                .background(AppStyle.cardBackground)
+                                .cornerRadius(10)
                             }
                         }
+                    } else {
+                        TextField("Exercise Name", text: $exerciseName)
+                            .padding()
+                            .background(AppStyle.cardBackground)
+                            .cornerRadius(10)
                     }
                 }
-                
-                // Current Weight
+
                 VStack(alignment: .leading) {
                     Text("Current Weight")
                         .font(.subheadline)
@@ -152,19 +181,18 @@ struct AddExerciseGoalView: View {
                         TextField("Enter Weight", text: $currentWeight)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.center)
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .frame(maxWidth: .infinity)
                         
                         Text("lbs")
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(AppStyle.cardBackground)
                     .cornerRadius(10)
                 }
                 
-                // Target Weight
                 VStack(alignment: .leading) {
                     Text("Target Weight")
                         .font(.subheadline)
@@ -173,33 +201,39 @@ struct AddExerciseGoalView: View {
                         TextField("Enter Target", text: $targetWeight)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.center)
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .frame(maxWidth: .infinity)
                         
                         Text("lbs")
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(AppStyle.cardBackground)
                     .cornerRadius(10)
                 }
-                
-                if !exercises.isEmpty {
-                    Text("Can't find your exercise? Add a custom one below.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    TextField("Custom Exercise Name", text: $exerciseName)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text("Target Date")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        DatePicker("", selection: $targetDate, in: Date()..., displayedComponents: .date)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                    }
                 }
+                
             }
             .padding(.horizontal)
             
             HStack {
+                Button("Cancel") {
+                    isPresented = false
+                }
+                .foregroundColor(.secondary)
+                
                 Spacer()
                 
                 Button("Save") {
@@ -207,27 +241,16 @@ struct AddExerciseGoalView: View {
                     isPresented = false
                 }
                 .disabled(exerciseName.isEmpty || currentWeight.isEmpty || targetWeight.isEmpty)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.accentColor)
-                .foregroundColor(.white)
-                .cornerRadius(10)
+                .foregroundColor(AppStyle.brandBlue)
             }
             .padding(.horizontal)
             .padding(.bottom)
         }
         .frame(width: UIScreen.main.bounds.width * 0.85)
-        .background(Color.gray.opacity(0.1))
+        .background(Color.white)
         .cornerRadius(15)
-        .navigationTitle("Exercise Goal")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(false)
+        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Cancel") {
-                    isPresented = false
-                }
-            }
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") {
@@ -259,7 +282,8 @@ struct AddExerciseGoalView: View {
         let goal = ExerciseGoal(
             exerciseName: exerciseName,
             targetWeight: target,
-            currentWeight: current
+            currentWeight: current,
+            targetDate: targetDate
         )
         
         // Created goal
@@ -322,10 +346,10 @@ struct EditBodyWeightGoalView: View {
         VStack(spacing: 16) {
             Text("Body Weight Goal")
                 .font(.headline)
+                .foregroundColor(AppStyle.brandBlue)
                 .padding(.top)
             
             VStack(spacing: 12) {
-                // Current Weight
                 VStack(alignment: .leading) {
                     Text("Current Weight")
                         .font(.subheadline)
@@ -334,15 +358,15 @@ struct EditBodyWeightGoalView: View {
                         TextField("Enter Weight", text: $currentWeight)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.center)
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .frame(maxWidth: .infinity)
                         
                         Text("lbs")
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(AppStyle.cardBackground)
                     .cornerRadius(10)
                     
                     if let lastWeight = lastRecordedWeight {
@@ -352,7 +376,6 @@ struct EditBodyWeightGoalView: View {
                     }
                 }
                 
-                // Target Weight
                 VStack(alignment: .leading) {
                     Text("Target Weight")
                         .font(.subheadline)
@@ -361,7 +384,7 @@ struct EditBodyWeightGoalView: View {
                         TextField("Enter Target", text: $targetWeight)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.center)
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .frame(maxWidth: .infinity)
                             .toolbar {
                                 ToolbarItemGroup(placement: .keyboard) {
@@ -373,24 +396,24 @@ struct EditBodyWeightGoalView: View {
                             }
                         
                         Text("lbs")
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                     .padding()
-                    .background(Color(.systemGray6))
+                    .background(AppStyle.cardBackground)
                     .cornerRadius(10)
                 }
                 
-                // Target Date
                 VStack(alignment: .leading) {
-                    Text("Target Date")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    DatePicker("", selection: $targetDate, in: Date()..., displayedComponents: .date)
-                        .datePickerStyle(.compact)
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
+                    HStack {
+                        Text("Target Date")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        DatePicker("", selection: $targetDate, in: Date()..., displayedComponents: .date)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                    }
                 }
             }
             .padding(.horizontal)
@@ -413,10 +436,9 @@ struct EditBodyWeightGoalView: View {
             .padding(.bottom)
         }
         .frame(width: UIScreen.main.bounds.width * 0.85)
-        .background(Color.gray.opacity(0.1))
+        .background(Color.white)
         .cornerRadius(15)
-        .navigationTitle("Body Weight Goal")
-        .navigationBarTitleDisplayMode(.inline)
+        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
         .onAppear {
             if let goal = userProfileStore.profile?.bodyWeightGoal {
                 currentWeight = String(format: "%.1f", goal.currentWeight)
@@ -498,6 +520,7 @@ struct EditExerciseGoalView: View {
     @State private var exerciseName = ""
     @State private var currentWeight = ""
     @State private var targetWeight = ""
+    @State private var targetDate = Date()
     
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -507,20 +530,21 @@ struct EditExerciseGoalView: View {
         VStack(spacing: 16) {
             Text("Edit Exercise Goal")
                 .font(.headline)
+                .foregroundColor(AppStyle.brandBlue)
                 .padding(.top)
             
             VStack(spacing: 12) {
-                // Exercise Name (read-only)
                 VStack(alignment: .leading) {
                     Text("Exercise")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    TextField("Exercise Name", text: $exerciseName)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .disabled(true)
+                    Text(exerciseName)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(AppStyle.cardBackground)
+                        .cornerRadius(10)
                 }
                 
-                // Current Weight
                 VStack(alignment: .leading) {
                     Text("Current Weight")
                         .font(.subheadline)
@@ -529,16 +553,18 @@ struct EditExerciseGoalView: View {
                         TextField("Enter Weight", text: $currentWeight)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.center)
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .frame(maxWidth: .infinity)
                         
                         Text("lbs")
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .foregroundColor(.secondary)
                     }
+                    .padding()
+                    .background(AppStyle.cardBackground)
+                    .cornerRadius(10)
                 }
                 
-                // Target Weight
                 VStack(alignment: .leading) {
                     Text("Target Weight")
                         .font(.subheadline)
@@ -547,33 +573,54 @@ struct EditExerciseGoalView: View {
                         TextField("Enter Target", text: $targetWeight)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.center)
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .frame(maxWidth: .infinity)
                         
                         Text("lbs")
-                            .font(.system(size: 28, weight: .medium))
+                            .font(.system(size: 22, weight: .medium))
                             .foregroundColor(.secondary)
                     }
+                    .padding()
+                    .background(AppStyle.cardBackground)
+                    .cornerRadius(10)
                 }
-                
-                // Save Button
-                Button("Save Goal") {
-                    saveExerciseGoal()
+
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text("Target Date")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        DatePicker("", selection: $targetDate, in: Date()..., displayedComponents: .date)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                    }
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.accentColor)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                .disabled(currentWeight.isEmpty || targetWeight.isEmpty)
             }
             .padding(.horizontal)
             
-            Spacer()
+            HStack {
+                Button("Cancel") {
+                    isPresented = false
+                }
+                .foregroundColor(.secondary)
+
+                Spacer()
+
+                Button("Save") {
+                    saveExerciseGoal()
+                    isPresented = false
+                }
+                .disabled(currentWeight.isEmpty || targetWeight.isEmpty)
+                .foregroundColor(AppStyle.brandBlue)
+            }
+            .padding(.horizontal)
+            .padding(.bottom)
         }
         .frame(width: UIScreen.main.bounds.width * 0.85)
         .background(Color.white)
         .cornerRadius(15)
+        .shadow(color: AppStyle.cardShadow, radius: 10, x: 0, y: 6)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -586,6 +633,7 @@ struct EditExerciseGoalView: View {
             exerciseName = initialGoal.exerciseName
             currentWeight = String(format: "%.1f", initialGoal.currentWeight)
             targetWeight = String(format: "%.1f", initialGoal.targetWeight)
+            targetDate = initialGoal.targetDate ?? Date()
         }
     }
     
@@ -602,7 +650,8 @@ struct EditExerciseGoalView: View {
             id: initialGoal.id,
             exerciseName: exerciseName,
             targetWeight: target,
-            currentWeight: current
+            currentWeight: current,
+            targetDate: targetDate
         )
         
         // Created updated goal

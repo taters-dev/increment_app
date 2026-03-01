@@ -8,6 +8,7 @@ struct UserProfile: Codable {
     var workoutSplit: [WorkoutDay]
     var goals: [ExerciseGoal]
     var bodyWeightGoal: BodyWeightGoal?
+    var workoutsGoal: WorkoutsGoal?
     var profileImageURL: String?
     
     struct WorkoutDay: Codable, Identifiable, Equatable {
@@ -53,6 +54,11 @@ struct UserProfile: Codable {
         if let bodyWeightGoalData = data["body_weight_goal"] as? [String: Any] {
             bodyWeightGoal = BodyWeightGoal.fromSupabase(data: bodyWeightGoalData)
         }
+
+        var workoutsGoal: WorkoutsGoal?
+        if let workoutsGoalData = data["workouts_goal"] as? [String: Any] {
+            workoutsGoal = WorkoutsGoal.fromSupabase(data: workoutsGoalData)
+        }
         
         let profileImageURL = data["profile_image_url"] as? String
         
@@ -63,6 +69,7 @@ struct UserProfile: Codable {
             workoutSplit: workoutSplit,
             goals: goals,
             bodyWeightGoal: bodyWeightGoal,
+            workoutsGoal: workoutsGoal,
             profileImageURL: profileImageURL
         )
     }
@@ -73,23 +80,27 @@ struct ExerciseGoal: Codable, Identifiable {
     var exerciseName: String
     var targetWeight: Double
     var currentWeight: Double
+    var targetDate: Date?
     
     var progressPercentage: Double {
         (currentWeight / targetWeight) * 100
     }
     
-    static func fromSupabase(data: [String: Any]) -> ExerciseGoal? {        guard let idString = data["id"] as? String,
+    static func fromSupabase(data: [String: Any]) -> ExerciseGoal? {
+        guard let idString = data["id"] as? String,
               let id = UUID(uuidString: idString),
               let exerciseName = data["exercise_name"] as? String,
               let targetWeight = data["target_weight"] as? Double,
               let currentWeight = data["current_weight"] as? Double else {
             return nil
         }
+        let targetDate = (data["target_date"] as? String).flatMap { ISO8601DateFormatter().date(from: $0) }
         return ExerciseGoal(
             id: id,
             exerciseName: exerciseName,
             targetWeight: targetWeight,
-            currentWeight: currentWeight
+            currentWeight: currentWeight,
+            targetDate: targetDate
         )
     }
 }
@@ -128,6 +139,19 @@ struct BodyWeightGoal: Codable {
             startDate: startDate,
             targetDate: targetDate
         )
+    }
+}
+
+struct WorkoutsGoal: Codable {
+    var weeklyTarget: Int
+    var monthlyTarget: Int
+
+    static func fromSupabase(data: [String: Any]) -> WorkoutsGoal? {
+        guard let weeklyTarget = data["weekly_target"] as? Int,
+              let monthlyTarget = data["monthly_target"] as? Int else {
+            return nil
+        }
+        return WorkoutsGoal(weeklyTarget: weeklyTarget, monthlyTarget: monthlyTarget)
     }
 }
 

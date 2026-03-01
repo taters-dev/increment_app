@@ -132,7 +132,7 @@ class SupabaseStore: ObservableObject {
         
         do {
             let response = try await supabase.from("user_profiles")
-                .select("user_id,name,email,bio,profile_image_url,body_weight_goal,goals,workout_split,created_at,updated_at")
+                .select("user_id,name,email,bio,profile_image_url,body_weight_goal,workouts_goal,goals,workout_split,created_at,updated_at")
                 .eq("user_id", value: userId.uuidString)
                 .single()
                 .execute()
@@ -254,6 +254,7 @@ struct SupabaseUserProfile: Codable {
     let bio: String
     let profile_image_url: String?
     let body_weight_goal: SupabaseBodyWeightGoal?
+    let workouts_goal: SupabaseWorkoutsGoal?
     let goals: [SupabaseExerciseGoal]
     let workout_split: [SupabaseWorkoutDay]
     let created_at: String
@@ -266,10 +267,21 @@ struct SupabaseUserProfile: Codable {
         self.bio = profile.bio
         self.profile_image_url = profile.profileImageURL
         self.body_weight_goal = profile.bodyWeightGoal.map { SupabaseBodyWeightGoal(from: $0) }
+        self.workouts_goal = profile.workoutsGoal.map { SupabaseWorkoutsGoal(from: $0) }
         self.goals = profile.goals.map { SupabaseExerciseGoal(from: $0) }
         self.workout_split = profile.workoutSplit.map { SupabaseWorkoutDay(from: $0) }
         self.created_at = ISO8601DateFormatter().string(from: Date())
         self.updated_at = ISO8601DateFormatter().string(from: Date())
+    }
+}
+
+struct SupabaseWorkoutsGoal: Codable {
+    let weekly_target: Int
+    let monthly_target: Int
+
+    init(from goal: WorkoutsGoal) {
+        self.weekly_target = goal.weeklyTarget
+        self.monthly_target = goal.monthlyTarget
     }
 }
 
@@ -304,12 +316,14 @@ struct SupabaseExerciseGoal: Codable {
     let exercise_name: String
     let target_weight: Double
     let current_weight: Double
+    let target_date: String?
     
     init(from goal: ExerciseGoal) {
         self.id = goal.id.uuidString
         self.exercise_name = goal.exerciseName
         self.target_weight = goal.targetWeight
         self.current_weight = goal.currentWeight
+        self.target_date = goal.targetDate.map { ISO8601DateFormatter().string(from: $0) }
     }
 }
 
