@@ -8,7 +8,6 @@ struct WorkoutDetailView: View {
     @State private var showingAddExercise = false
     @State private var editMode: EditMode = .inactive
     @State private var notes: String
-    @State private var showingImagePicker = false
     @State private var selectedItem: PhotosPickerItem?
     @State private var bodyWeight: String
     @State private var showingCamera = false
@@ -72,9 +71,8 @@ struct WorkoutDetailView: View {
                 .listRowBackground(AppStyle.cardBackground)
                 
                 if workout.name == "Progress Photo" {
-                    if let photoURL = workout.progressPhotoURL,
-                       let url = URL(string: photoURL) {
-                        AsyncImage(url: url) { image in
+                    if workout.progressPhotoURL != nil {
+                        SecureStorageImage(reference: workout.progressPhotoURL, bucket: .progressPhotos) { image in
                             image
                                 .resizable()
                                 .scaledToFit()
@@ -205,7 +203,7 @@ struct WorkoutDetailView: View {
             Task {
                 if let data = try? await item?.loadTransferable(type: Data.self),
                    let image = UIImage(data: data),
-                   let compressedData = image.jpegData(compressionQuality: 0.8) {
+                   let compressedData = image.scaledDown(maxDimension: 1200).jpegData(compressionQuality: 0.6) {
                     await workoutStore.uploadProgressPhoto(compressedData, for: workout.id)
                     if let updated = workoutStore.workouts.first(where: { $0.id == workout.id }) {
                         workout.progressPhotoURL = updated.progressPhotoURL
@@ -220,7 +218,7 @@ struct WorkoutDetailView: View {
                 },
                 set: { newImage in
                     if let image = newImage,
-                       let compressedData = image.jpegData(compressionQuality: 0.8) {
+                       let compressedData = image.scaledDown(maxDimension: 1200).jpegData(compressionQuality: 0.6) {
                         Task {
                             await workoutStore.uploadProgressPhoto(compressedData, for: workout.id)
                             if let updated = workoutStore.workouts.first(where: { $0.id == workout.id }) {
@@ -232,8 +230,7 @@ struct WorkoutDetailView: View {
             ), sourceType: .camera)
         }
         .fullScreenCover(isPresented: $showingFullScreenImage) {
-            if let photoURL = workout.progressPhotoURL,
-               let url = URL(string: photoURL) {
+            if workout.progressPhotoURL != nil {
                 ZStack {
                     Color.black.ignoresSafeArea()
                     
@@ -250,7 +247,7 @@ struct WorkoutDetailView: View {
                         
                         Spacer()
                         
-                        AsyncImage(url: url) { image in
+                        SecureStorageImage(reference: workout.progressPhotoURL, bucket: .progressPhotos) { image in
                             image
                                 .resizable()
                                 .scaledToFit()

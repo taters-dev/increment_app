@@ -5,10 +5,13 @@ struct SettingsView: View {
     @EnvironmentObject var userProfileStore: UserProfileStore
     @EnvironmentObject var workoutStore: WorkoutStore
     @EnvironmentObject var authManager: AuthenticationManager
-    @State private var showingImagePicker = false
     @State private var selectedItem: PhotosPickerItem?
     @State private var showingWorkoutSplitEditor = false
     @State private var showingWorkoutsGoalEditor = false
+    @State private var showingPrivacyPolicy = false
+    @State private var showingDeleteAccountConfirmation = false
+    @State private var deletionErrorMessage = ""
+    @State private var showingDeletionError = false
     
     var body: some View {
         ZStack {
@@ -21,9 +24,8 @@ struct SettingsView: View {
                     if let profile = userProfileStore.profile {
                         Section {
                             HStack {
-                                if let imageURL = profile.profileImageURL,
-                                   let url = URL(string: imageURL) {
-                                    AsyncImage(url: url) { image in
+                                if profile.profileImageURL != nil {
+                                    SecureStorageImage(reference: profile.profileImageURL, bucket: .profileImages) { image in
                                         image
                                             .resizable()
                                             .scaledToFill()
@@ -67,9 +69,20 @@ struct SettingsView: View {
                             Label("Workouts Goal", systemImage: "calendar.badge.checkmark")
                         }
                         .foregroundColor(.primary)
+
+                        Button(action: { showingPrivacyPolicy = true }) {
+                            Label("Privacy Policy", systemImage: "hand.raised")
+                        }
+                        .foregroundColor(.primary)
                     }
                     
                     Section(header: Text("Account")) {
+                        Button(role: .destructive, action: {
+                            showingDeleteAccountConfirmation = true
+                        }) {
+                            Label("Delete Account", systemImage: "trash")
+                        }
+
                         Button(action: {
                             Task {
                                 await authManager.signOut()
@@ -97,8 +110,69 @@ struct SettingsView: View {
                         WorkoutsGoalEditorView(isPresented: $showingWorkoutsGoalEditor)
                             .environmentObject(userProfileStore)
                     }
+                    .sheet(isPresented: $showingPrivacyPolicy) {
+                        PrivacyPolicyView()
+                    }
+                    .confirmationDialog("Delete Account?", isPresented: $showingDeleteAccountConfirmation, titleVisibility: .visible) {
+                        Button("Delete", role: .destructive) {
+                            Task {
+                                await deleteAccount()
+                            }
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("This will permanently delete your account, profile, workouts, and uploaded photos.")
+                    }
+                    .alert("Account Deletion Failed", isPresented: $showingDeletionError) {
+                        Button("OK", role: .cancel) {}
+                    } message: {
+                        Text(deletionErrorMessage)
+                    }
                     }
                     .scrollContentBackground(.hidden)
+                }
+            }
+        }
+    }
+
+    @MainActor
+    private func deleteAccount() async {
+        do {
+            try await SupabaseStore.shared.deleteAccount()
+            workoutStore.reset()
+            userProfileStore.reset()
+            authManager.currentUser = nil
+            authManager.isAuthenticated = false
+        } catch {
+            deletionErrorMessage = error.localizedDescription
+            showingDeletionError = true
+        }
+    }
+}
+
+struct PrivacyPolicyView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Increment stores your account details, workouts, body-weight entries, goals, profile image, and progress photos so the app can sync your data across sessions.")
+                    Text("Profile images and progress photos are stored in Supabase Storage. Workout and profile data are stored in Supabase tables and also cached locally on device for offline access.")
+                    Text("You can delete your account from Settings. Deleting your account removes your profile, workouts, and uploaded photos.")
+                    Text("If you publish a hosted privacy policy URL for App Store Connect, keep it consistent with this in-app summary.")
+                        .foregroundColor(.secondary)
+                }
+                .font(.body)
+                .padding()
+            }
+            .navigationTitle("Privacy Policy")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
                 }
             }
         }

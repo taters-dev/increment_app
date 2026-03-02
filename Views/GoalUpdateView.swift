@@ -293,7 +293,10 @@ struct AddExerciseGoalView: View {
             email: "",
             bio: "",
             workoutSplit: [],
-            goals: []
+            goals: [],
+            bodyWeightGoal: nil,
+            workoutsGoal: nil,
+            profileImageURL: nil
         )
         
         // Current profile has goals
@@ -474,7 +477,10 @@ struct EditBodyWeightGoalView: View {
             email: "",
             bio: "",
             workoutSplit: [],
-            goals: []
+            goals: [],
+            bodyWeightGoal: nil,
+            workoutsGoal: nil,
+            profileImageURL: nil
         )
         profile.bodyWeightGoal = goal
         // Set body weight goal in profile
@@ -661,7 +667,10 @@ struct EditExerciseGoalView: View {
             email: "",
             bio: "",
             workoutSplit: [],
-            goals: []
+            goals: [],
+            bodyWeightGoal: nil,
+            workoutsGoal: nil,
+            profileImageURL: nil
         )
         
         // Current profile has goals

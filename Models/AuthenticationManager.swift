@@ -35,6 +35,7 @@ class AuthenticationManager: ObservableObject {
     func signUp(email: String, password: String, name: String) async -> Bool {
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         
         do {
             let response = try await supabase.auth.signUp(
@@ -42,18 +43,25 @@ class AuthenticationManager: ObservableObject {
                 password: password,
                 data: ["name": .string(name)]
             )
-            
-            self.currentUser = response.user
-            self.isAuthenticated = true
-            isLoading = false
-            
-            // Create initial user profile after successful signup
-            await createInitialProfile(name: name, email: email)
-            
+
+            if let session = response.session {
+                currentUser = session.user
+                isAuthenticated = true
+            } else {
+                let signInResponse = try await supabase.auth.signIn(
+                    email: email,
+                    password: password
+                )
+                currentUser = signInResponse.user
+                isAuthenticated = true
+            }
+
+            await createInitialProfileIfNeeded(name: name, email: email)
             return true
         } catch {
             errorMessage = error.localizedDescription
-            isLoading = false
+            isAuthenticated = false
+            currentUser = nil
             return false
         }
     }
@@ -61,6 +69,7 @@ class AuthenticationManager: ObservableObject {
     func signIn(email: String, password: String) async -> Bool {
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         
         do {
             let response = try await supabase.auth.signIn(
@@ -68,13 +77,13 @@ class AuthenticationManager: ObservableObject {
                 password: password
             )
             
-            self.currentUser = response.user
-            self.isAuthenticated = true
-            isLoading = false
+            currentUser = response.user
+            isAuthenticated = true
             return true
         } catch {
             errorMessage = error.localizedDescription
-            isLoading = false
+            isAuthenticated = false
+            currentUser = nil
             return false
         }
     }
@@ -99,22 +108,24 @@ class AuthenticationManager: ObservableObject {
         }
     }
     
-    private func createInitialProfile(name: String, email: String) async {
-        // Create an empty user profile for new users
+    private func createInitialProfileIfNeeded(name: String, email: String) async {
+        if let existingProfile = try? await SupabaseStore.shared.fetchProfile(), existingProfile != nil {
+            return
+        }
+
         let initialProfile = UserProfile(
             name: name,
             email: email,
             bio: "",
-            workoutSplit: [], // Empty workout split
-            goals: [], // Empty goals
-            bodyWeightGoal: nil, // No body weight goal initially
+            workoutSplit: [],
+            goals: [],
+            bodyWeightGoal: nil,
+            workoutsGoal: nil,
             profileImageURL: nil
         )
         
-        // Save the profile locally and sync to Supabase
         let userProfileStore = UserProfileStore()
         userProfileStore.profile = initialProfile
         await userProfileStore.saveProfile()
-                // Created initial user profile
     }
 }

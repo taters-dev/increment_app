@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 struct UserProfile: Codable {
     var name: String
@@ -257,7 +258,7 @@ class UserProfileStore: ObservableObject, Sendable {
             try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second debounce
             let data = try JSONEncoder().encode(profile)
             let outfile = try Self.fileURL()
-            try data.write(to: outfile)
+            try data.write(to: outfile, options: .completeFileProtection)
         }
         
         try await saveTask?.value
@@ -304,9 +305,16 @@ class UserProfileStore: ObservableObject, Sendable {
         Task { @MainActor in
             toastManager?.startLoading("Uploading profile image...")
             do {
-                let url = try await supabaseStore.uploadProfileImage(imageData)
-                let cacheBustedURL = url + (url.contains("?") ? "&" : "?") + "t=\(Int(Date().timeIntervalSince1970))"
-                profile?.profileImageURL = cacheBustedURL
+                guard let image = UIImage(data: imageData) else {
+                    throw SupabaseError.dataError("Invalid image data.")
+                }
+                let resizedImage = image.scaledDown(maxDimension: 1200)
+                guard let compressedData = resizedImage.jpegData(compressionQuality: 0.6) else {
+                    throw SupabaseError.dataError("Unable to prepare image.")
+                }
+
+                let imagePath = try await supabaseStore.uploadProfileImage(compressedData)
+                profile?.profileImageURL = imagePath
                 await saveProfile()
                 toastManager?.stopLoading()
                 toastManager?.showSuccess("Profile image updated successfully")

@@ -127,7 +127,7 @@ class AppStateManager: ObservableObject {
         
         do {
             let data = try JSONEncoder().encode(state)
-            try data.write(to: url)
+            try data.write(to: url, options: .completeFileProtection)
         } catch {
             // Handle error silently in production
         }

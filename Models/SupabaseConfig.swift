@@ -4,8 +4,8 @@ import Supabase
 class SupabaseConfig {
     static let shared = SupabaseConfig()
     
-    private let supabaseURL: URL
-    private let supabaseAnonKey: String
+    let supabaseURL: URL
+    let supabaseAnonKey: String
     
     lazy var client: SupabaseClient = {
         return SupabaseClient(
@@ -13,6 +13,15 @@ class SupabaseConfig {
             supabaseKey: supabaseAnonKey
         )
     }()
+
+    var functionsBaseURL: URL {
+        guard let host = supabaseURL.host else {
+            return supabaseURL
+        }
+
+        let projectRef = host.replacingOccurrences(of: ".supabase.co", with: "")
+        return URL(string: "https://\(projectRef).functions.supabase.co") ?? supabaseURL
+    }
     
     private init() {
         // Prefer Info.plist (values injected from .xcconfig), fallback to bundled Config.plist.

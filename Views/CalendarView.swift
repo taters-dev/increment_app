@@ -120,8 +120,7 @@ struct CalendarView: View {
             // Modal overlays (on top of everything)
             if showingFullScreenImage,
                    let workout = selectedWorkout,
-                   let photoURL = workout.progressPhotoURL,
-                   let url = URL(string: photoURL) {
+                   workout.progressPhotoURL != nil {
                     // Progress photo modal
                     Color.black.opacity(0.3)
                         .ignoresSafeArea()
@@ -158,8 +157,7 @@ struct CalendarView: View {
                                 }
                                 .padding()
                                 
-                                // Image
-                                AsyncImage(url: url) { image in
+                                SecureStorageImage(reference: workout.progressPhotoURL, bucket: .progressPhotos) { image in
                                     image
                                         .resizable()
                                         .scaledToFit()
@@ -412,10 +410,9 @@ struct WorkoutHistoryDetailView: View {
                     }
                 }
                 
-                if let photoURL = workout.progressPhotoURL,
-                   let url = URL(string: photoURL) {
+                if workout.progressPhotoURL != nil {
                     Section(header: Text("Progress Photo")) {
-                        AsyncImage(url: url) { image in
+                        SecureStorageImage(reference: workout.progressPhotoURL, bucket: .progressPhotos) { image in
                             image
                                 .resizable()
                                 .scaledToFit()

@@ -86,8 +86,8 @@ struct ProgressPhotoUploadView: View {
     
     private func saveProgressPhoto() {
         guard let image = selectedImage else { return }
-        let resizedImage = image.scaledDown(maxDimension: 1600)
-        guard let imageData = resizedImage.jpegData(compressionQuality: 0.7) else { return }
+        let resizedImage = image.scaledDown(maxDimension: 1200)
+        guard let imageData = resizedImage.jpegData(compressionQuality: 0.6) else { return }
         
         let today = Calendar.current.startOfDay(for: Date())
         var workoutId: UUID?

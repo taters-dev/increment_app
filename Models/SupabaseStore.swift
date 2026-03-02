@@ -6,6 +6,7 @@ class SupabaseStore: ObservableObject {
     static let shared = SupabaseStore()
     let authManager = AuthenticationManager.shared
     private let supabase = SupabaseConfig.shared.client
+    private let supabaseConfig = SupabaseConfig.shared
     private let profileImagesBucket = "profile-images"
     private let progressPhotosBucket = "progress-photo"
     
@@ -159,11 +160,7 @@ class SupabaseStore: ObservableObject {
             .from(profileImagesBucket)
             .upload(path, data: data, options: options)
 
-        let publicURL = try supabase.storage
-            .from(profileImagesBucket)
-            .getPublicURL(path: path)
-
-        return publicURL.absoluteString
+        return path
     }
 
     @MainActor
@@ -178,11 +175,54 @@ class SupabaseStore: ObservableObject {
             .from(progressPhotosBucket)
             .upload(path, data: data, options: options)
 
-        let publicURL = try supabase.storage
-            .from(progressPhotosBucket)
-            .getPublicURL(path: path)
+        return path
+    }
 
-        return publicURL.absoluteString
+    @MainActor
+    func downloadProfileImageData(from reference: String?) async throws -> Data? {
+        try await downloadStorageData(from: reference, bucket: profileImagesBucket)
+    }
+
+    @MainActor
+    func downloadProgressPhotoData(from reference: String?) async throws -> Data? {
+        try await downloadStorageData(from: reference, bucket: progressPhotosBucket)
+    }
+
+    @MainActor
+    func deleteAccount() async throws {
+        let session = try await supabase.auth.session
+        let endpoint = supabaseConfig.functionsBaseURL.appendingPathComponent("delete-account")
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(supabaseConfig.supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.httpBody = Data("{}".utf8)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200..<300).contains(httpResponse.statusCode) else {
+            let message = String(data: data, encoding: .utf8) ?? "Unable to delete account."
+            throw SupabaseError.networkError(message)
+        }
+    }
+
+    @MainActor
+    private func downloadStorageData(from reference: String?, bucket: String) async throws -> Data? {
+        guard let reference, !reference.isEmpty else {
+            return nil
+        }
+
+        if let directURL = URL(string: reference),
+           let scheme = directURL.scheme,
+           scheme == "http" || scheme == "https" {
+            let request = URLRequest(url: directURL, cachePolicy: .returnCacheDataElseLoad, timeoutInterval: 30)
+            let (data, _) = try await URLSession.shared.data(for: request)
+            return data
+        }
+
+        return try await supabase.storage
+            .from(bucket)
+            .download(path: reference)
     }
 
 }

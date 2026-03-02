@@ -62,7 +62,7 @@ class WorkoutStore: ObservableObject {
     func saveImmediate() async throws {
         let data = try JSONEncoder().encode(workouts)
         let outfile = try Self.fileURL()
-        try data.write(to: outfile)
+        try data.write(to: outfile, options: .completeFileProtection)
     }
     
     private static func fileURL() throws -> URL {
@@ -158,7 +158,7 @@ class WorkoutStore: ObservableObject {
     func save() async throws {
         let data = try JSONEncoder().encode(workouts)
         let outfile = try Self.fileURL()
-        try data.write(to: outfile)
+        try data.write(to: outfile, options: .completeFileProtection)
     }
     
     func loadLocalOnly() async throws {
