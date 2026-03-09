@@ -207,17 +207,11 @@ class WorkoutStore: ObservableObject {
     }
     
     func restoreActiveWorkout() {
-        let today = Calendar.current.startOfDay(for: Date())
-        
-        let todaysWorkouts = workouts.filter { workout in
-            Calendar.current.isDate(workout.date, inSameDayAs: today)
-        }
-        
-        let exerciseWorkouts = todaysWorkouts.filter { workout in
+        let exerciseWorkouts = workouts.filter { workout in
             !workout.name.contains("Weight Update") && !workout.name.contains("Progress Photo")
         }
-        
-        let workoutToRestore = exerciseWorkouts.first ?? todaysWorkouts.first
+
+        let workoutToRestore = exerciseWorkouts.max(by: { $0.date < $1.date })
         
         if let workout = workoutToRestore, activeWorkout == nil {
             activeWorkout = workout

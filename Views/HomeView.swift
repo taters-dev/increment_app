@@ -1,5 +1,10 @@
 import SwiftUI
 
+private struct ExerciseHistorySelection: Identifiable {
+    let id = UUID()
+    let exerciseName: String
+}
+
 struct HomeView: View {
     @EnvironmentObject var workoutStore: WorkoutStore
     @EnvironmentObject var userProfileStore: UserProfileStore
@@ -10,8 +15,7 @@ struct HomeView: View {
     @State private var selectedWorkoutDay: UserProfile.WorkoutDay?
     @State private var showingSettings = false
     @State private var showingExerciseEditor = false
-    @State private var showingExerciseHistory = false
-    @State private var selectedExerciseForHistory: String = ""
+    @State private var exerciseHistorySelection: ExerciseHistorySelection?
     
     var todayWorkout: UserProfile.WorkoutDay? {
         let weekday = Calendar.current.component(.weekday, from: Date()) - 1
@@ -47,8 +51,9 @@ struct HomeView: View {
                                         selectedWorkout: $selectedWorkoutDay,
                                         showingSettings: $showingSettings,
                                         showingExerciseEditor: $showingExerciseEditor,
-                                        showingExerciseHistory: $showingExerciseHistory,
-                                        selectedExerciseForHistory: $selectedExerciseForHistory,
+                                        onExerciseHistoryTap: { exerciseName in
+                                            exerciseHistorySelection = ExerciseHistorySelection(exerciseName: exerciseName)
+                                        },
                                         onStartTap: {
                                             showingNewWorkout = true
                                         }
@@ -63,8 +68,9 @@ struct HomeView: View {
                                         selectedWorkout: $selectedWorkoutDay,
                                         showingSettings: $showingSettings,
                                         showingExerciseEditor: $showingExerciseEditor,
-                                        showingExerciseHistory: $showingExerciseHistory,
-                                        selectedExerciseForHistory: $selectedExerciseForHistory,
+                                        onExerciseHistoryTap: { exerciseName in
+                                            exerciseHistorySelection = ExerciseHistorySelection(exerciseName: exerciseName)
+                                        },
                                         onStartTap: {
                                             showingNewWorkout = true
                                         }
@@ -146,8 +152,8 @@ struct HomeView: View {
             )
             .environmentObject(userProfileStore)
         }
-        .sheet(isPresented: $showingExerciseHistory) {
-            ExerciseHistoryView(exerciseName: selectedExerciseForHistory)
+        .sheet(item: $exerciseHistorySelection) { selection in
+            ExerciseHistoryView(exerciseName: selection.exerciseName)
                 .environmentObject(workoutStore)
         }
     }
@@ -170,8 +176,7 @@ struct TodayWorkoutCard: View {
     @Binding var selectedWorkout: UserProfile.WorkoutDay?
     @Binding var showingSettings: Bool
     @Binding var showingExerciseEditor: Bool
-    @Binding var showingExerciseHistory: Bool
-    @Binding var selectedExerciseForHistory: String
+    let onExerciseHistoryTap: (String) -> Void
     @EnvironmentObject var workoutStore: WorkoutStore
     @EnvironmentObject var userProfileStore: UserProfileStore
     @State private var editedExercises: [ExerciseTemplate] = []
@@ -185,8 +190,7 @@ struct TodayWorkoutCard: View {
         selectedWorkout: Binding<UserProfile.WorkoutDay?>,
         showingSettings: Binding<Bool>,
         showingExerciseEditor: Binding<Bool>,
-        showingExerciseHistory: Binding<Bool>,
-        selectedExerciseForHistory: Binding<String>,
+        onExerciseHistoryTap: @escaping (String) -> Void,
         onStartTap: @escaping () -> Void
     ) {
         self.workout = workout
@@ -196,8 +200,7 @@ struct TodayWorkoutCard: View {
         _selectedWorkout = selectedWorkout
         _showingSettings = showingSettings
         _showingExerciseEditor = showingExerciseEditor
-        _showingExerciseHistory = showingExerciseHistory
-        _selectedExerciseForHistory = selectedExerciseForHistory
+        self.onExerciseHistoryTap = onExerciseHistoryTap
     }
     
     var displayedWorkout: UserProfile.WorkoutDay {
@@ -283,8 +286,7 @@ struct TodayWorkoutCard: View {
                                     editedExercises: $editedExercises,
                                     onSave: saveChanges,
                                     onExerciseNameTap: { exerciseName in
-                                        selectedExerciseForHistory = exerciseName
-                                        showingExerciseHistory = true
+                                        onExerciseHistoryTap(exerciseName)
                                     }
                                 )
                                 .listRowInsets(EdgeInsets())
@@ -358,10 +360,8 @@ struct TodayWorkoutCard: View {
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .onAppear {
-            // Check if there's an active workout for today and use that data
-            let today = Calendar.current.startOfDay(for: Date())
+            // If an active workout exists for this workout name, keep using it even across midnight.
             if let activeWorkout = workoutStore.activeWorkout,
-               Calendar.current.isDate(activeWorkout.date, inSameDayAs: today),
                activeWorkout.name == displayedWorkout.name {
                 // Convert Exercise to ExerciseTemplate for display
                 editedExercises = activeWorkout.exercises.map { exercise in
@@ -384,10 +384,8 @@ struct TodayWorkoutCard: View {
             }
         }
         .onChange(of: selectedWorkout) { _, newWorkout in
-            // Check if there's an active workout for today and use that data
-            let today = Calendar.current.startOfDay(for: Date())
+            // Keep showing active workout data for this workout name even if day rolled over.
             if let activeWorkout = workoutStore.activeWorkout,
-               Calendar.current.isDate(activeWorkout.date, inSameDayAs: today),
                activeWorkout.name == displayedWorkout.name {
                 // Convert Exercise to ExerciseTemplate for display
                 editedExercises = activeWorkout.exercises.map { exercise in

@@ -1,6 +1,11 @@
 import SwiftUI
 import PhotosUI
 
+private struct ExerciseHistorySelection: Identifiable {
+    let id = UUID()
+    let exerciseName: String
+}
+
 struct WorkoutDetailView: View {
     @State var workout: Workout
     @Environment(\.dismiss) private var dismiss
@@ -12,8 +17,7 @@ struct WorkoutDetailView: View {
     @State private var bodyWeight: String
     @State private var showingCamera = false
     @State private var showingFullScreenImage = false
-    @State private var showingExerciseHistory = false
-    @State private var selectedExerciseForHistory: String = ""
+    @State private var exerciseHistorySelection: ExerciseHistorySelection?
     var onDismiss: () -> Void
     
     init(workout: Workout, onDismiss: @escaping () -> Void = {}) {
@@ -106,8 +110,7 @@ struct WorkoutDetailView: View {
                     ForEach(workout.exercises) { exercise in
                         VStack(alignment: .leading, spacing: 8) {
                             Button(action: {
-                                selectedExerciseForHistory = exercise.name
-                                showingExerciseHistory = true
+                                exerciseHistorySelection = ExerciseHistorySelection(exerciseName: exercise.name)
                             }) {
                                 Text(exercise.name)
                                     .font(.headline)
@@ -269,8 +272,8 @@ struct WorkoutDetailView: View {
                 cancelEditing()
             }
         }
-        .sheet(isPresented: $showingExerciseHistory) {
-            ExerciseHistoryView(exerciseName: selectedExerciseForHistory)
+        .sheet(item: $exerciseHistorySelection) { selection in
+            ExerciseHistoryView(exerciseName: selection.exerciseName)
                 .environmentObject(workoutStore)
         }
     }

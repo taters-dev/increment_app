@@ -6,10 +6,11 @@ struct ExerciseHistoryView: View {
     @Environment(\.dismiss) private var dismiss
     
     private var exerciseHistory: [(Date, [ExerciseSet])] {
-        workoutStore.workouts
+        let normalizedExerciseName = normalizeExerciseName(exerciseName)
+        return workoutStore.workouts
             .flatMap { workout in
                 workout.exercises
-                    .filter { $0.name == exerciseName }
+                    .filter { normalizeExerciseName($0.name) == normalizedExerciseName }
                     .map { exercise in
                         (workout.date, exercise.sets)
                     }
@@ -157,6 +158,10 @@ struct ExerciseHistoryView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
+    }
+
+    private func normalizeExerciseName(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 }
 

@@ -278,33 +278,47 @@ struct NewWorkoutView: View {
     }
     
     private func startWorkout() {
-        let today = Calendar.current.startOfDay(for: Date())
-        
-        // Check if a workout with this name already exists for today
-        if let existingIndex = workoutStore.workouts.firstIndex(where: { workout in
-            Calendar.current.isDate(workout.date, inSameDayAs: today) && workout.name == workoutName
-        }) {
-            // Update existing workout
+        let workoutDate = startTime ?? Date()
+
+        // Always prioritize ID matching so an in-progress workout survives midnight rollover.
+        if let workoutId,
+           let existingIndex = workoutStore.workouts.firstIndex(where: { $0.id == workoutId }) {
             let existingWorkout = workoutStore.workouts[existingIndex]
-            workoutId = existingWorkout.id
             let updatedWorkout = Workout(
                 id: existingWorkout.id,
-                date: startTime ?? Date(),
+                date: workoutDate,
                 name: workoutName,
                 exercises: exercises
             )
             workoutStore.workouts[existingIndex] = updatedWorkout
-            workoutStore.updateActiveWorkout(updatedWorkout)        } else {
-            // Create new workout
+            workoutStore.updateActiveWorkout(updatedWorkout)
+            return
+        }
+
+        if let existingIndex = workoutStore.workouts.firstIndex(where: { workout in
+            Calendar.current.isDate(workout.date, inSameDayAs: workoutDate) && workout.name == workoutName
+        }) {
+            let existingWorkout = workoutStore.workouts[existingIndex]
+            workoutId = existingWorkout.id
+            let updatedWorkout = Workout(
+                id: existingWorkout.id,
+                date: workoutDate,
+                name: workoutName,
+                exercises: exercises
+            )
+            workoutStore.workouts[existingIndex] = updatedWorkout
+            workoutStore.updateActiveWorkout(updatedWorkout)
+        } else {
             let workout = Workout(
                 id: workoutId ?? UUID(),
-                date: startTime ?? Date(),
+                date: workoutDate,
                 name: workoutName,
                 exercises: exercises
             )
             workoutId = workout.id
             workoutStore.updateActiveWorkout(workout)
-            workoutStore.workouts.append(workout)        }
+            workoutStore.workouts.append(workout)
+        }
         
         Task {
             await workoutStore.saveWorkouts()
@@ -312,31 +326,43 @@ struct NewWorkoutView: View {
     }
     
     private func saveWorkout() {
-        let today = Calendar.current.startOfDay(for: Date())
-        
-        // Check if a workout with this name already exists for today
-        if let existingIndex = workoutStore.workouts.firstIndex(where: { workout in
-            Calendar.current.isDate(workout.date, inSameDayAs: today) && workout.name == workoutName
-        }) {
-            // Update existing workout
+        let workoutDate = startTime ?? Date()
+
+        if let workoutId,
+           let existingIndex = workoutStore.workouts.firstIndex(where: { $0.id == workoutId }) {
             let existingWorkout = workoutStore.workouts[existingIndex]
             let updatedWorkout = Workout(
                 id: existingWorkout.id,
-                date: startTime ?? Date(),
+                date: workoutDate,
                 name: workoutName,
                 exercises: exercises
             )
             workoutStore.workouts[existingIndex] = updatedWorkout
-            workoutStore.updateActiveWorkout(updatedWorkout)        } else {
-            // Create new workout
+            workoutStore.updateActiveWorkout(updatedWorkout)
+        } else if let existingIndex = workoutStore.workouts.firstIndex(where: { workout in
+            Calendar.current.isDate(workout.date, inSameDayAs: workoutDate) && workout.name == workoutName
+        }) {
+            let existingWorkout = workoutStore.workouts[existingIndex]
+            let updatedWorkout = Workout(
+                id: existingWorkout.id,
+                date: workoutDate,
+                name: workoutName,
+                exercises: exercises
+            )
+            workoutStore.workouts[existingIndex] = updatedWorkout
+            workoutId = existingWorkout.id
+            workoutStore.updateActiveWorkout(updatedWorkout)
+        } else {
             let updatedWorkout = Workout(
                 id: workoutId ?? UUID(),
-                date: startTime ?? Date(),
+                date: workoutDate,
                 name: workoutName,
                 exercises: exercises
             )
             workoutStore.workouts.append(updatedWorkout)
-            workoutStore.updateActiveWorkout(updatedWorkout)        }
+            workoutId = updatedWorkout.id
+            workoutStore.updateActiveWorkout(updatedWorkout)
+        }
         
         Task {
             await workoutStore.saveWorkouts()
