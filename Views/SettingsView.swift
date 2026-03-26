@@ -102,14 +102,6 @@ struct SettingsView: View {
                             }
                         }
                     }
-                    .sheet(isPresented: $showingWorkoutSplitEditor) {
-                        WorkoutSplitEditorView()
-                            .environmentObject(userProfileStore)
-                    }
-                    .sheet(isPresented: $showingWorkoutsGoalEditor) {
-                        WorkoutsGoalEditorView(isPresented: $showingWorkoutsGoalEditor)
-                            .environmentObject(userProfileStore)
-                    }
                     .sheet(isPresented: $showingPrivacyPolicy) {
                         PrivacyPolicyView()
                     }
@@ -132,6 +124,14 @@ struct SettingsView: View {
                     .scrollContentBackground(.hidden)
                 }
             }
+        }
+        .sheet(isPresented: $showingWorkoutSplitEditor) {
+            WorkoutSplitEditorView()
+                .environmentObject(userProfileStore)
+        }
+        .sheet(isPresented: $showingWorkoutsGoalEditor) {
+            WorkoutsGoalEditorView(isPresented: $showingWorkoutsGoalEditor)
+                .environmentObject(userProfileStore)
         }
     }
 

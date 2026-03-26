@@ -50,6 +50,13 @@ struct ProgressDashboardView: View {
             workout.name != "Weight Update"
         }.count
     }
+
+    private var hasAnyGoals: Bool {
+        guard let profile = userProfileStore.profile else { return false }
+        return profile.workoutsGoal != nil ||
+            profile.bodyWeightGoal != nil ||
+            !profile.goals.isEmpty
+    }
     
     var body: some View {
         ZStack {
@@ -82,6 +89,18 @@ struct ProgressDashboardView: View {
                         
                         if let profile = userProfileStore.profile {
                             VStack(spacing: AppStyle.sectionSpacing) {
+                                if !hasAnyGoals {
+                                    Text("You don't have any goals yet. Use the buttons above to add an exercise, weight, or workouts goal.")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                        .padding()
+                                        .background(AppStyle.cardBackground)
+                                        .cornerRadius(AppStyle.cardCornerRadius)
+                                        .shadow(color: AppStyle.cardShadow, radius: 8, x: 0, y: 4)
+                                }
+
                                 if let workoutsGoal = profile.workoutsGoal {
                                     WorkoutsGoalCard(
                                         weeklyCount: weeklyWorkoutCount,

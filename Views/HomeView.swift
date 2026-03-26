@@ -14,6 +14,7 @@ struct HomeView: View {
     @State private var showingWorkoutDetail = false
     @State private var selectedWorkoutDay: UserProfile.WorkoutDay?
     @State private var showingSettings = false
+    @State private var showingWorkoutSplitEditor = false
     @State private var showingExerciseEditor = false
     @State private var exerciseHistorySelection: ExerciseHistorySelection?
     
@@ -36,6 +37,7 @@ struct HomeView: View {
             AppStyle.surface.ignoresSafeArea()
             VStack(spacing: 0) {
                 HeaderView(title: "Home", subtitle: Date().formatted(date: .abbreviated, time: .omitted))
+                    .padding(.top, 10)
                 
                 // Scrollable content
                 GeometryReader { geo in
@@ -78,16 +80,23 @@ struct HomeView: View {
                                     .environmentObject(userProfileStore)
                                     .padding(.horizontal, AppStyle.cardPadding)
                                 } else {
-                                    NoWorkoutScheduledCard()
-                                        .padding(.horizontal, AppStyle.cardPadding)
+                                    NoWorkoutScheduledCard(onCreateTap: {
+                                        selectedWorkoutDay = nil
+                                        showingWorkoutSplitEditor = true
+                                    })
+                                    .padding(.horizontal, AppStyle.cardPadding)
                                 }
                             } else {
-                                NoWorkoutScheduledCard()
-                                    .padding(.horizontal, AppStyle.cardPadding)
+                                NoWorkoutScheduledCard(onCreateTap: {
+                                    selectedWorkoutDay = nil
+                                    showingWorkoutSplitEditor = true
+                                })
+                                .padding(.horizontal, AppStyle.cardPadding)
                             }
                         }
                         .frame(minHeight: geo.size.height, alignment: .top)
-                        .padding(.top, -22)
+                        .padding(.top, 12)
+                        .padding(.bottom, 12)
                     }
                 }
             }
@@ -141,6 +150,10 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
+                .environmentObject(userProfileStore)
+        }
+        .sheet(isPresented: $showingWorkoutSplitEditor) {
+            WorkoutSplitEditorView()
                 .environmentObject(userProfileStore)
         }
         .sheet(isPresented: $showingExerciseEditor) {
@@ -575,13 +588,28 @@ struct TodayWorkoutCard: View {
 }
 
 struct NoWorkoutScheduledCard: View {
+    var onCreateTap: () -> Void
+
     var body: some View {
-        VStack(spacing: 12) {
-            Text("No Workout Scheduled")
+        VStack(spacing: 16) {
+            Text("No workout split found")
                 .font(.headline)
-            Text("Rest day! Take time to recover and prepare for your next workout.")
+                .foregroundColor(AppStyle.brandBlue)
+
+            Text("Looks like you haven’t created a workout split yet. Tap below to set one up and start tracking your progress.")
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
+                .font(.subheadline)
+
+            Button(action: onCreateTap) {
+                Text("Create Workout Split")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(AppStyle.brandBlue)
+                    .foregroundColor(.white)
+                    .cornerRadius(20)
+            }
         }
         .padding(AppStyle.cardPadding)
         .frame(maxWidth: .infinity)
