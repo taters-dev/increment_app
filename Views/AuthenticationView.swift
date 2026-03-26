@@ -17,7 +17,7 @@ struct AuthenticationView: View {
                     Text("INCREMENT")
                         .font(.system(size: 24, weight: .bold, design: .default))
                         .italic()
-                        .foregroundColor(Color(red: 11/255, green: 20/255, blue: 64/255))
+                        .foregroundColor(AppStyle.brandBlue)
                     
                     Text("Track Your Progress")
                         .font(.subheadline)
@@ -31,21 +31,29 @@ struct AuthenticationView: View {
                 VStack(spacing: 16) {
                     if !isLoginMode {
                         TextField("Full Name", text: $name)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding()
+                            .background(AppStyle.cardBackground)
+                            .cornerRadius(20)
                             .autocapitalization(.words)
                     }
                     
                     TextField("Email", text: $email)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                        .background(AppStyle.cardBackground)
+                        .cornerRadius(20)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                     
                     SecureField("Password", text: $password)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                        .background(AppStyle.cardBackground)
+                        .cornerRadius(20)
                     
                     if !isLoginMode {
                         SecureField("Confirm Password", text: $confirmPassword)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding()
+                            .background(AppStyle.cardBackground)
+                            .cornerRadius(20)
                     }
                     
                     // Action Button
@@ -60,9 +68,9 @@ struct AuthenticationView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color(red: 11/255, green: 20/255, blue: 64/255))
+                        .background(AppStyle.brandBlue)
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(20)
                     }
                     .disabled(authManager.isLoading || !isFormValid)
                     
@@ -72,15 +80,7 @@ struct AuthenticationView: View {
                         clearForm()
                     }) {
                         Text(isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Sign In")
-                            .foregroundColor(Color(red: 11/255, green: 20/255, blue: 64/255))
-                    }
-                    
-                    // Forgot Password
-                    if isLoginMode {
-                        Button("Forgot Password?") {
-                            handleForgotPassword()
-                        }
-                        .foregroundColor(.secondary)
+                            .foregroundColor(AppStyle.brandBlue)
                     }
                 }
                 .padding(.horizontal, 40)
@@ -122,22 +122,6 @@ struct AuthenticationView: View {
             }
             
             if !success {
-                showingAlert = true
-            }
-        }
-    }
-    
-    private func handleForgotPassword() {
-        guard !email.isEmpty else {
-            showingAlert = true
-            return
-        }
-        
-        Task {
-            let success = await authManager.resetPassword(email: email)
-            if success {
-                // Show success message
-            } else {
                 showingAlert = true
             }
         }
