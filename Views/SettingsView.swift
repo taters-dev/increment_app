@@ -160,8 +160,6 @@ struct PrivacyPolicyView: View {
                     Text("Increment stores your account details, workouts, body-weight entries, goals, profile image, and progress photos so the app can sync your data across sessions.")
                     Text("Profile images and progress photos are stored in Supabase Storage. Workout and profile data are stored in Supabase tables and also cached locally on device for offline access.")
                     Text("You can delete your account from Settings. Deleting your account removes your profile, workouts, and uploaded photos.")
-                    Text("If you publish a hosted privacy policy URL for App Store Connect, keep it consistent with this in-app summary.")
-                        .foregroundColor(.secondary)
                 }
                 .font(.body)
                 .padding()
